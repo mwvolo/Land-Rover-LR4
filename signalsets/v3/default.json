@@ -46,10 +46,6 @@
   "signals": [
     {"id": "LR4_REAR_DIFF_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 150, "min": -40, "add": -40, "unit": "celsius" }, "name": "Locking Diff Oil Temp"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"01": "2F"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_FUEL_LEVEL", "path": "Fuel", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Fuel Level", "suggestedMetric": "fuelTankLevel"}
-  ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "033E"}, "freq": 1,
   "signals": [
     {"id": "LR4_FUEL_RAIL_P", "path": "Fuel", "fmt": { "len": 16, "max": 30000, "unit": "kilopascal" }, "name": "Fuel Rail Pressure"}
@@ -133,6 +129,54 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11C5"}, "freq": 1,
   "signals": [
     {"id": "LR4_11C5_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "11C5 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40B"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_MAP", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "kilopascal" }, "name": "Manifold Pressure"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40F"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_IAT", "path": "Engine", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Intake Air Temp"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F410"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_MAF", "path": "Engine", "fmt": { "len": 16, "max": 655.35, "div": 100, "unit": "gramsPerSecond" }, "name": "Mass Air Flow"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F42F"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_FUEL_LEVEL", "path": "Fuel", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Fuel Level"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F433"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_BARO", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "kilopascal" }, "name": "Barometric Pressure"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F43C"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_CAT_TEMP_B1", "path": "Engine", "fmt": { "len": 16, "max": 6513.5, "min": -40, "div": 10, "add": -40, "unit": "celsius" }, "name": "Catalyst Temp B1S1"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F43D"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_CAT_TEMP_B2", "path": "Engine", "fmt": { "len": 16, "max": 6513.5, "min": -40, "div": 10, "add": -40, "unit": "celsius" }, "name": "Catalyst Temp B2S1"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F443"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_LOAD_ABS", "path": "Engine", "fmt": { "len": 16, "max": 25700, "mul": 100, "div": 255, "unit": "percent" }, "name": "Absolute Load"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F444"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_EQ_RATIO", "path": "Engine", "fmt": { "len": 16, "max": 2, "div": 32768, "unit": "ratio" }, "name": "Equivalence Ratio"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F446"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_AMBIENT_TEMP", "path": "Climate", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Ambient Air Temp"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F44C"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_THROTTLE_CMD", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Commanded Throttle"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F45C"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_OIL_TEMP_SAE", "path": "Engine", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Oil Temp (SAE)"}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0302"}, "freq": 1,
   "signals": [
