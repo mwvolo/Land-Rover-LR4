@@ -1,39 +1,76 @@
-{
-    "commands": [
-      { "hdr": "7E0", "rax": "7E8", "cmd": { "22": "03F3" }, "freq": 0.5,
-        "signals": [
-          { "id": "LR4_ENGINE_OIL_TEMP", "path": "Engine",
-            "fmt": { "len": 8, "add": -40, "min": -40, "max": 120, "unit": "celsius" },
-            "name": "Oil Temp" }
-        ]},
-
-      { "hdr": "7E0", "rax": "7E8", "cmd": { "22": "03F2" }, "freq": 0.5,
-        "signals": [
-          { "id": "LR4_ENGINE_OIL_VOLUME_GAL", "path": "Engine",
-            "fmt": { "len": 8, "mul": 0.0264172, "min": 0, "max": 6.74, "unit": "gallons" },
-            "name": "Oil Volume" }
-        ]
-      },
-      { "hdr": "7E1", "rax": "7E9", "cmd": { "22": "1E69" }, "freq": 0.5,
-        "signals": [
-          { "id": "LR4_GEARBOX_OIL_TEMP", "path": "Drivetrain",
-            "fmt": { "len": 8, "add": -40, "min": -40, "max": 120, "unit": "celsius" },
-            "name": "Gearbox Temp" }
-        ]
-      },
-      { "hdr": "795", "cmd": { "22": "1E8A" }, "freq": 0.5,
-        "signals": [
-          { "id": "LR4_REAR_DIFF_TEMP", "path": "Drivetrain",
-            "fmt": { "len": 8, "add": -40, "min": -40, "max": 150, "unit": "celsius" },
-            "name": "Locking Diff Oil Temp" }
-        ]
-      },
-      { "hdr": "7E0", "rax": "7E8", "cmd": { "22": "03E6" }, "freq": 0.5,
-        "signals": [
-          { "id": "LR4_MEASURED_OIL_LEVEL", "path": "Engine",
-            "fmt": { "len": 8, "min": 0, "max": 255, "unit": "millimeters" },
-            "name": "Oil Level" }
-        ]
-      }
-    ]
-  }
+{ "commands": [
+{ "hdr": "710", "cmd": {"22": "3B03"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_FR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Right"}
+  ]},
+{ "hdr": "710", "cmd": {"22": "3B04"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_FL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Left"}
+  ]},
+{ "hdr": "710", "cmd": {"22": "3B05"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_RR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Right"}
+  ]},
+{ "hdr": "710", "cmd": {"22": "3B06"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_RL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Left"}
+  ]},
+{ "hdr": "732", "cmd": {"22": "D928"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_GEAR",   "path": "Drivetrain", "fmt": {          "len": 7, "max": 127, "unit": "scalar" }, "name": "Gear"},
+    {"id": "LR4_PARKED", "path": "Movement",   "fmt": {"bix": 7, "len": 1, "max": 1,   "unit": "noyes"  }, "name": "Parked"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_FL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Left Tire Pressure", "suggestedMetric": "frontLeftTirePressure"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2077"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_FR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Right Tire Pressure", "suggestedMetric": "frontRightTirePressure"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2078"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_RR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Right Tire Pressure", "suggestedMetric": "rearRightTirePressure"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2079"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_RL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Left Tire Pressure", "suggestedMetric": "rearLeftTirePressure"}
+  ]},
+{ "hdr": "795", "cmd": {"22": "1E8A"}, "freq": 0.5,
+  "signals": [
+    {"id": "LR4_REAR_DIFF_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 150, "min": -40, "add": -40, "unit": "celsius" }, "name": "Locking Diff Oil Temp"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "03E6"}, "freq": 0.5,
+  "signals": [
+    {"id": "LR4_MEASURED_OIL_LEVEL", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "millimeters" }, "name": "Oil Level"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "03F2"}, "freq": 0.5,
+  "signals": [
+    {"id": "LR4_ENGINE_OIL_VOLUME_GAL", "path": "Engine", "fmt": { "len": 8, "max": 6.74, "mul": 0.0264172, "unit": "gallons" }, "name": "Oil Volume"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "03F3"}, "freq": 0.5,
+  "signals": [
+    {"id": "LR4_ENGINE_OIL_TEMP", "path": "Engine", "fmt": { "len": 8, "max": 120, "min": -40, "add": -40, "unit": "celsius" }, "name": "Oil Temp"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1172"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_BAT_V", "path": "Battery", "fmt": { "len": 8, "max": 15.9375, "mul": 625, "div": 10000, "unit": "volts" }, "name": "Battery Voltage"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1670"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_FUEL_RAIL_P", "path": "Fuel", "fmt": { "len": 16, "max": 511992.1875, "mul": 78125, "div": 10000, "unit": "kilopascal" }, "name": "Fuel Rail Pressure"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "168E"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_FUEL_RAIL_T", "path": "Fuel", "fmt": { "len": 8, "max": 60.96, "min": -61.44, "mul": 48, "div": 100, "sign": true, "unit": "celsius" }, "name": "Fuel Rail Temperature"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "16C1"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_FLI", "path": "Fuel", "fmt": { "len": 16, "max": 100, "mul": 200, "div": 65535, "unit": "percent" }, "name": "Fuel Tank Level", "suggestedMetric": "fuelTankLevel"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E69"}, "freq": 0.5,
+  "signals": [
+    {"id": "LR4_GEARBOX_OIL_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 120, "min": -40, "add": -40, "unit": "celsius" }, "name": "Gearbox Temp"}
+  ]}
+]
+}
