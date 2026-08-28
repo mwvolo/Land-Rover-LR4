@@ -164,7 +164,7 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F444"}, "freq": 1,
   "signals": [
-    {"id": "LR4_EQ_RATIO", "path": "Engine", "fmt": { "len": 16, "max": 2, "div": 32768, "unit": "ratio" }, "name": "Equivalence Ratio"}
+    {"id": "LR4_EQ_RATIO", "path": "Engine", "fmt": { "len": 16, "max": 2, "div": 32768, "unit": "scalar" }, "name": "Equivalence Ratio"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F446"}, "freq": 1,
   "signals": [
