@@ -130,9 +130,25 @@
   "signals": [
     {"id": "LR4_11C5_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "11C5 Raw"}
   ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F404"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_LOAD_CALC", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Calculated Load"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F406"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SHRTFT1", "path": "Fuel", "fmt": { "len": 8, "max": 99.2, "min": -100, "mul": 100, "div": 128, "add": -100, "unit": "percent" }, "name": "Short Term Fuel Trim B1"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F407"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_LONGFT1", "path": "Fuel", "fmt": { "len": 8, "max": 99.2, "min": -100, "mul": 100, "div": 128, "add": -100, "unit": "percent" }, "name": "Long Term Fuel Trim B1"}
+  ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40B"}, "freq": 1,
   "signals": [
     {"id": "LR4_MAP", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "kilopascal" }, "name": "Manifold Pressure"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40E"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SPARK_ADV", "path": "Engine", "fmt": { "len": 8, "max": 63.5, "min": -64, "div": 2, "add": -64, "unit": "degrees" }, "name": "Timing Advance"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40F"}, "freq": 1,
   "signals": [
@@ -141,6 +157,14 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F410"}, "freq": 1,
   "signals": [
     {"id": "LR4_MAF", "path": "Engine", "fmt": { "len": 16, "max": 655.35, "div": 100, "unit": "gramsPerSecond" }, "name": "Mass Air Flow"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F411"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_THROTTLE_POS", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Throttle Position"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F423"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_FUEL_RAIL_P_GAUGE", "path": "Fuel", "fmt": { "len": 16, "max": 655350, "mul": 10, "unit": "kilopascal" }, "name": "Fuel Rail Pressure (SAE)"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F42F"}, "freq": 1,
   "signals": [
@@ -169,6 +193,14 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F446"}, "freq": 1,
   "signals": [
     {"id": "LR4_AMBIENT_TEMP", "path": "Climate", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Ambient Air Temp"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F449"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_PEDAL_D", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Accelerator Pedal D"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F44A"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_PEDAL_E", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Accelerator Pedal E"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F44C"}, "freq": 1,
   "signals": [
