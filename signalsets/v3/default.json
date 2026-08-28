@@ -17,7 +17,14 @@
   ]},
 { "hdr": "732", "cmd": {"22": "D928"}, "freq": 1,
   "signals": [
-    {"id": "LR4_D928_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "D928 State"}
+    {"id": "LR4_GEAR_SELECTOR", "path": "Transmission", "name": "Gear Selector", "fmt": {"len": 8, "map": {
+          "0": { "description": "Park",    "value": "Park" },
+          "1": { "description": "Reverse", "value": "Reverse" },
+          "2": { "description": "Neutral", "value": "Neutral" },
+          "3": { "description": "Drive",   "value": "Drive" },
+          "7": { "description": "Sport",   "value": "Sport" }
+        }}
+    }
   ]},
 { "hdr": "751", "rax": "759", "cmd": {"22": "2076"}, "freq": 5,
   "signals": [
@@ -41,7 +48,7 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "033E"}, "freq": 1,
   "signals": [
-    {"id": "LR4_033E_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "033E Raw"}
+    {"id": "LR4_FUEL_RAIL_P", "path": "Fuel", "fmt": { "len": 16, "max": 30000, "unit": "kilopascal" }, "name": "Fuel Rail Pressure"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "03E6"}, "freq": 0.5,
   "signals": [
@@ -59,6 +66,22 @@
   "signals": [
     {"id": "LR4_CHARGE_AIR_TEMP", "path": "Engine", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Charge Air Temp"}
   ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "112C"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_112C_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "112C Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1139"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_1139_RAW", "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "1139 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "113F"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_113F_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "113F Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1151"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_1151_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1151 Raw"}
+  ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1153"}, "freq": 1,
   "signals": [
     {"id": "LR4_1153_RAW", "path": "ECU", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "scalar" }, "name": "1153 Raw"}
@@ -71,9 +94,25 @@
   "signals": [
     {"id": "LR4_1156_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1156 Raw"}
   ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1159"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_1159_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1159 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "115B"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_115B_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "115B Raw"}
+  ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1160"}, "freq": 1,
   "signals": [
     {"id": "LR4_1160_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1160 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1164"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_1164_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1164 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1187"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_1187_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1187 Raw"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11BA"}, "freq": 1,
   "signals": [
@@ -83,9 +122,25 @@
   "signals": [
     {"id": "LR4_11BD_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "11BD Raw"}
   ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11C4"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_11C4_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "11C4 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11C5"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_11C5_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "11C5 Raw"}
+  ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0302"}, "freq": 1,
   "signals": [
     {"id": "LR4_0302_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "0302 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0303"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_0303_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "0303 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0304"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_0304_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "0304 Raw"}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0805"}, "freq": 1,
   "signals": [
@@ -98,6 +153,10 @@
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E69"}, "freq": 0.5,
   "signals": [
     {"id": "LR4_GEARBOX_OIL_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 120, "min": -40, "add": -40, "unit": "celsius" }, "name": "Gearbox Temp"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "2104"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_2104_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "2104 Raw"}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "210F"}, "freq": 1,
   "signals": [
