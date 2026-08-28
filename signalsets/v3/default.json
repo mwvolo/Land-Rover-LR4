@@ -1,7 +1,39 @@
 { "commands": [
+{ "hdr": "710", "cmd": {"22": "3B03"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_FR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Right"}
+  ]},
+{ "hdr": "710", "cmd": {"22": "3B04"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_FL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Left"}
+  ]},
+{ "hdr": "710", "cmd": {"22": "3B05"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_RR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Right"}
+  ]},
+{ "hdr": "710", "cmd": {"22": "3B06"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_PRES_RL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Left"}
+  ]},
 { "hdr": "732", "cmd": {"22": "D928"}, "freq": 1,
   "signals": [
     {"id": "LR4_D928_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "D928 State"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_FL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Left Tire Pressure", "suggestedMetric": "frontLeftTirePressure"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2077"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_FR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Right Tire Pressure", "suggestedMetric": "frontRightTirePressure"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2078"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_RR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Right Tire Pressure", "suggestedMetric": "rearRightTirePressure"}
+  ]},
+{ "hdr": "751", "rax": "759", "cmd": {"22": "2079"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TP_RL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Left Tire Pressure", "suggestedMetric": "rearLeftTirePressure"}
   ]},
 { "hdr": "795", "cmd": {"22": "1E8A"}, "freq": 0.5,
   "signals": [
