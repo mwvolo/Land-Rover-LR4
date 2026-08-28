@@ -46,6 +46,10 @@
   "signals": [
     {"id": "LR4_REAR_DIFF_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 150, "min": -40, "add": -40, "unit": "celsius" }, "name": "Locking Diff Oil Temp"}
   ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"01": "2F"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_FUEL_LEVEL", "path": "Fuel", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Fuel Level", "suggestedMetric": "fuelTankLevel"}
+  ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "033E"}, "freq": 1,
   "signals": [
     {"id": "LR4_FUEL_RAIL_P", "path": "Fuel", "fmt": { "len": 16, "max": 30000, "unit": "kilopascal" }, "name": "Fuel Rail Pressure"}
