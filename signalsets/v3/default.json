@@ -1,44 +1,15 @@
 { "commands": [
-{ "hdr": "710", "cmd": {"22": "3B03"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_SUSPENSION_PRES_FR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Right"}
-  ]},
-{ "hdr": "710", "cmd": {"22": "3B04"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_SUSPENSION_PRES_FL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Left"}
-  ]},
-{ "hdr": "710", "cmd": {"22": "3B05"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_SUSPENSION_PRES_RR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Right"}
-  ]},
-{ "hdr": "710", "cmd": {"22": "3B06"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_SUSPENSION_PRES_RL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Left"}
-  ]},
 { "hdr": "732", "cmd": {"22": "D928"}, "freq": 1,
   "signals": [
-    {"id": "LR4_GEAR",   "path": "Drivetrain", "fmt": {          "len": 7, "max": 127, "unit": "scalar" }, "name": "Gear"},
-    {"id": "LR4_PARKED", "path": "Movement",   "fmt": {"bix": 7, "len": 1, "max": 1,   "unit": "noyes"  }, "name": "Parked"}
-  ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2076"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_TP_FL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Left Tire Pressure", "suggestedMetric": "frontLeftTirePressure"}
-  ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2077"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_TP_FR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Right Tire Pressure", "suggestedMetric": "frontRightTirePressure"}
-  ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2078"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_TP_RR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Right Tire Pressure", "suggestedMetric": "rearRightTirePressure"}
-  ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2079"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_TP_RL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Left Tire Pressure", "suggestedMetric": "rearLeftTirePressure"}
+    {"id": "LR4_D928_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "D928 State"}
   ]},
 { "hdr": "795", "cmd": {"22": "1E8A"}, "freq": 0.5,
   "signals": [
     {"id": "LR4_REAR_DIFF_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 150, "min": -40, "add": -40, "unit": "celsius" }, "name": "Locking Diff Oil Temp"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "033E"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_033E_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "033E Raw"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "03E6"}, "freq": 0.5,
   "signals": [
@@ -52,25 +23,53 @@
   "signals": [
     {"id": "LR4_ENGINE_OIL_TEMP", "path": "Engine", "fmt": { "len": 8, "max": 120, "min": -40, "add": -40, "unit": "celsius" }, "name": "Oil Temp"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1172"}, "freq": 1,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "0520"}, "freq": 1,
   "signals": [
-    {"id": "LR4_BAT_V", "path": "Battery", "fmt": { "len": 8, "max": 15.9375, "mul": 625, "div": 10000, "unit": "volts" }, "name": "Battery Voltage"}
+    {"id": "LR4_CHARGE_AIR_TEMP", "path": "Engine", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Charge Air Temp"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1670"}, "freq": 1,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1153"}, "freq": 1,
   "signals": [
-    {"id": "LR4_FUEL_RAIL_P", "path": "Fuel", "fmt": { "len": 16, "max": 511992.1875, "mul": 78125, "div": 10000, "unit": "kilopascal" }, "name": "Fuel Rail Pressure"}
+    {"id": "LR4_1153_RAW", "path": "ECU", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "scalar" }, "name": "1153 Raw"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "168E"}, "freq": 1,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1154"}, "freq": 1,
   "signals": [
-    {"id": "LR4_FUEL_RAIL_T", "path": "Fuel", "fmt": { "len": 8, "max": 60.96, "min": -61.44, "mul": 48, "div": 100, "sign": true, "unit": "celsius" }, "name": "Fuel Rail Temperature"}
+    {"id": "LR4_1154_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1154 Raw"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "16C1"}, "freq": 1,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1156"}, "freq": 1,
   "signals": [
-    {"id": "LR4_FLI", "path": "Fuel", "fmt": { "len": 16, "max": 100, "mul": 200, "div": 65535, "unit": "percent" }, "name": "Fuel Tank Level", "suggestedMetric": "fuelTankLevel"}
+    {"id": "LR4_1156_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1156 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1160"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_1160_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1160 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11BA"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_11BA_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "11BA Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11BD"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_11BD_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "11BD Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0302"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_0302_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "0302 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0805"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_0805_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "0805 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "101A"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_101A_RAW", "path": "ECU", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "scalar" }, "name": "101A Raw"}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E69"}, "freq": 0.5,
   "signals": [
     {"id": "LR4_GEARBOX_OIL_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 120, "min": -40, "add": -40, "unit": "celsius" }, "name": "Gearbox Temp"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "210F"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_210F_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "210F State"}
   ]}
 ]
 }
