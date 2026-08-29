@@ -12,17 +12,25 @@ on the bus but hasn't been decoded yet.
 
 ## Modules
 
-Seven modules answer on this truck. Requests go to `hdr`, replies come back
+Thirteen modules answer on this truck. Six have never been mined — they
+reject unknown DIDs with a negative response rather than staying silent,
+which is how we know they're there. Requests go to `hdr`, replies come back
 from `rax`.
 
 | Request | Response | Module |
 |---|---|---|
 | `7E0` | `7E8` | Engine (ECM) |
 | `7E1` | `7E9` | Transmission (TCM) |
+| `716` | `71E` | Unmined |
+| `726` | `72E` | Unmined — returns the VIN |
 | `732` | `73A` | Gear selector |
+| `734` | `73C` | Unmined |
+| `737` | `73F` | Unmined |
+| `760` | `768` | Unmined |
 | `761` | `769` | Body / instrument |
-| `795` | `79D` | Rear differential |
 | `792` | `79A` | Unidentified — answers `2A3x` |
+| `795` | `79D` | Rear differential |
+| `797` | `79F` | Unmined |
 | `7D3` | `7DB` | Air suspension (EAS) |
 
 Two addressing quirks are worth knowing:
@@ -240,6 +248,105 @@ closest thing to a boost gauge this vehicle exposes. The schema's only
 operation is division, so true gauge boost (`MAP − Barometric`) isn't
 expressible as a synthetic — but the ratio carries the same information and
 needs no altitude correction.
+
+---
+
+## Altitude and mountain driving
+
+### Reading altitude
+
+There's no altitude signal, but **Barometric Pressure is one** — air thins
+predictably with height. Read `22F433` directly:
+
+| Altitude | Barometric | In psi |
+|---|---|---|
+| Sea level | 101 kPa | 14.7 |
+| 2,000 ft | 94 kPa | 13.7 |
+| 4,000 ft | 88 kPa | 12.7 |
+| 6,000 ft | 81 kPa | 11.8 |
+| 8,000 ft | 75 kPa | 10.9 |
+| 10,000 ft | 70 kPa | 10.1 |
+| 12,000 ft | 64 kPa | 9.3 |
+
+Roughly 1 kPa per 300 ft in this range. Weather shifts it a few kPa, so treat
+it as approximate unless you calibrate against a known elevation.
+
+### What altitude does to the engine
+
+A naturally aspirated engine loses about 3% power per 1,000 ft. Yours loses
+much less, because the supercharger is a fixed-displacement blower geared to
+the crank — it keeps stuffing the same volume in regardless of ambient
+pressure. What you'll see instead:
+
+- **Boost Pressure Ratio holds steady.** It's normalised against barometric,
+  so it reads the same at 10,000 ft as at sea level. That's the point of
+  using the ratio rather than raw manifold pressure.
+- **Mass Air Flow drops** at the same throttle and RPM. Thinner air, less
+  mass, less fuel, less power — the loss the blower can't fully erase.
+- **Fuel trims may drift positive** as the ECU adapts. Mild drift climbing a
+  long pass is normal, not a fault.
+
+### What to watch climbing
+
+Sustained high load is the hardest thing you'll ask of the truck.
+
+| Signal | Watch for |
+|---|---|
+| Charge Air Temp | Climbing on a long pull, with Timing Advance retarding — the ECU protecting itself, and where your power goes |
+| Gearbox Temp | The one that matters. Sustained climbing in a low gear heats the ZF fast |
+| Coolant Temp | Should stay near 100°C. Rising past that on a grade means the cooling system is at its limit |
+| Absolute Load | Pinned near 100% for long stretches means you're asking for everything available |
+
+### What to watch descending
+
+Engine braking sends heat somewhere different.
+
+- **Lambda goes to 2.00** on a closed-throttle descent. That's deceleration
+  fuel cut, working exactly as intended — you're using no fuel at all.
+- **Gearbox Temp still climbs** in a low gear, even off-throttle.
+- **Coolant Temp can rise** on a long descent despite low load, because
+  airflow is low and the engine is being driven by the wheels.
+
+---
+
+## Off-road
+
+### Air suspension
+
+The four corner pressures are the most useful thing you have off-road. On
+uneven ground the truck articulates, and pressures diverge as weight shifts.
+
+- **Suspension Balance Front / Rear** — the two synthetic ratios. At 1.0 the
+  axle is evenly loaded. Away from 1.0, weight has moved to one side.
+- A corner going very low while its opposite goes high means that wheel is
+  unloading — the first hint of lifting a wheel.
+- **Height Offset** shows where you are relative to normal ride height.
+
+Back on pavement both balance ratios should settle at 1.0. If one doesn't,
+you've either shifted your load or picked up a slow leak.
+
+### Watch on the trail
+
+| Signal | Why |
+|---|---|
+| Gearbox Temp | Low-range crawling generates heat with almost no airflow. The number to respect |
+| Locking Diff Oil Temp | Same reason, and it climbs fast when the diff is locked and working |
+| Coolant Temp | Low speed means low airflow; the fan is doing the work alone |
+| Suspension Balance | Articulation and weight transfer, live |
+| Gear Selector | Confirms what the transmission thinks it's in |
+
+Ride Height, Ride Height Front/Rear and Drive Mode are in the signalset as
+untested probes — the addresses come from a Jaguar EAS that shares this
+module's pressure DIDs, so they have a good chance of working. If Drive Mode
+returns a value, note what it reads in each Terrain Response setting and the
+numbers can be mapped to names.
+
+### Before you go
+
+Air suspension raises the truck at low speed and drops it as you speed up. If
+you're crawling and it lowers unexpectedly, watch Height Offset and the
+corner pressures — an EAS fault normally means the truck sits down, which
+matters a lot more with rocks under it than in a parking lot.
 
 ---
 

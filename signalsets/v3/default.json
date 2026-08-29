@@ -98,6 +98,18 @@
   "signals": [
     {"id": "LR4_SUSPENSION_2B12", "path": "Suspension", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "millimeters" }, "name": "Suspension Height Offset"}
   ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B00"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_3B00_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B00 Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B01"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_3B01_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B01 Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B02"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_3B02_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B02 Raw"}
+  ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B03"}, "freq": 1,
   "signals": [
     {"id": "LR4_SUSPENSION_PRES_FR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "nullmin": 0, "unit": "psi" }, "name": "Suspension Pressure Front Right"}
@@ -117,6 +129,38 @@
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B07"}, "freq": 1,
   "signals": [
     {"id": "LR4_SUSPENSION_3B07", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "nullmin": 0, "unit": "psi" }, "name": "Suspension 3B07"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B08"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_3B08_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B08 Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B09"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_3B09_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B09 Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B0A"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_3B0A_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B0A Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B0B"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_3B0B_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B0B Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B3C"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_DRIVE_MODE", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Drive Mode"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B71"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_RIDE_HEIGHT_FRONT", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height Front"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B72"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_RIDE_HEIGHT_REAR", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height Rear"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "D11A"}, "freq": 1,
   "signals": [
