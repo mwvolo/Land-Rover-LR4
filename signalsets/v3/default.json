@@ -274,5 +274,31 @@
   "signals": [
     {"id": "LR4_1E70_RAW", "path": "Transmission", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E70 Raw"}
   ]}
+],
+"synthetics": [
+  { "id": "LR4_BANK_BALANCE", "path": "Engine", "name": "Bank Balance", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_CAT_TEMP_B1", "b": "LR4_CAT_TEMP_B2"
+  }},
+  { "id": "LR4_BOOST_RATIO", "path": "Engine", "name": "Boost Pressure Ratio", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_MAP", "b": "LR4_BARO"
+  }},
+  { "id": "LR4_LAMBDA_TRACKING", "path": "Engine", "name": "Lambda Tracking", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_O2_LAMBDA", "b": "LR4_EQ_RATIO"
+  }},
+  { "id": "LR4_PEDAL_AGREEMENT", "path": "Engine", "name": "Pedal Agreement", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_PEDAL_D", "b": "LR4_PEDAL_E"
+  }},
+  { "id": "LR4_RAIL_CROSSCHECK", "path": "Fuel", "name": "Rail Pressure Crosscheck", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_FUEL_RAIL_P", "b": "LR4_FUEL_RAIL_P_GAUGE"
+  }},
+  { "id": "LR4_SUSPENSION_BALANCE_F", "path": "Suspension", "name": "Suspension Balance Front", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_SUSPENSION_PRES_FL", "b": "LR4_SUSPENSION_PRES_FR"
+  }},
+  { "id": "LR4_SUSPENSION_BALANCE_R", "path": "Suspension", "name": "Suspension Balance Rear", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_SUSPENSION_PRES_RL", "b": "LR4_SUSPENSION_PRES_RR"
+  }},
+  { "id": "LR4_THROTTLE_TRACKING", "path": "Engine", "name": "Throttle Tracking", "max": 3, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_THROTTLE_POS", "b": "LR4_THROTTLE_CMD"
+  }}
 ]
 }

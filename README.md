@@ -215,6 +215,34 @@ positive trim.
 
 ---
 
+## Computed signals
+
+The signalset defines eight synthetic signals. Each is a **ratio between two
+readings that should hold a known value**, which makes them suited to a
+display: you learn the normal number once, and anything else is a signal.
+
+| Signal | Ratio | Normal | Meaning when it moves |
+|---|---|---|---|
+| Boost Pressure Ratio | MAP / Barometric | 1.0 idle, up to ~1.8 | Above 1.0 is supercharger boost, self-correcting for altitude |
+| Lambda Tracking | Measured / Commanded lambda | 1.0 | Fuelling isn't hitting its target — sensor, leak, or delivery |
+| Bank Balance | Cat temp B1 / B2 | 1.0 | One bank working harder — misfire or injector on the low side |
+| Pedal Agreement | Pedal D / Pedal E | 1.0 | Redundant pedal sensors disagreeing; the ECU limps if they diverge |
+| Throttle Tracking | Actual / Commanded throttle | 1.0 | Plate not following orders — sticky or carbonned throttle body |
+| Rail Pressure Crosscheck | Proprietary / SAE rail pressure | steady | Drift means one sensor path is wrong |
+| Suspension Balance Front | Front left / right pressure | 1.0 | A corner losing air, before the dash warns |
+| Suspension Balance Rear | Rear left / right pressure | 1.0 | Same, rear axle |
+
+Six of the eight sit at **1.0 when healthy**, so a single glance covers
+fuelling, ignition balance, pedal and throttle integrity, and air springs.
+
+Boost Pressure Ratio is the exception and the one to watch for fun: it's the
+closest thing to a boost gauge this vehicle exposes. The schema's only
+operation is division, so true gauge boost (`MAP − Barometric`) isn't
+expressible as a synthetic — but the ratio carries the same information and
+needs no altitude correction.
+
+---
+
 ## Undecoded
 
 These respond on the bus but their meaning isn't established. They're in the
