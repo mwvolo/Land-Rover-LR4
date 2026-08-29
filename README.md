@@ -407,11 +407,30 @@ formulas eventually get worked out.
 | `761` / `769` | `197C`, `D11C` |
 | `7D3` / `7DB` | `3B07` — reads lower than the four corner pressures |
 
-**Tire pressures remain unsolved.** Module `751` returns no data to any
-request. Both Toyota-Tacoma and Jeep-Grand-Cherokee reach their tire modules
-through addressing modes never tried here — Tacoma via ISO-TP extended
-addressing (`eax`/`tst`/`fcm1`), Jeep via a 29-bit header (`DAC7`). The
-extended-address variant is in this signalset as `LR4_TPMS_EAX2A`.
+**Tire pressures remain unsolved, but they exist.** Module `751` returns no
+data to any request, and nothing found so far resembles four tire pressures.
+The decisive clue is the spare: this truck warns when the *spare* is low, and a
+spare does not rotate — so there is no wheel-speed difference to infer it from.
+That rules out an indirect system and means real pressure sensors are fitted and
+reporting to some module. Six modules answer negative responses but have never
+been mined — `716`, `726`, `734`, `737`, `760`, `797` — and each is now probed
+with the Jaguar tire-pressure DID as a locator. A positive response from any of
+them finds the module.
+
+### Air suspension notes
+
+`3B71` and `3B72` track the height sensors, and they read **inverted** — the
+number falls as the truck rises. Observed: 115/115 at normal height, 93/101
+raised. Treat a falling value as the truck going up.
+
+`3B3C` is the height mode and increments upward: mode 1 was normal and mode 2
+was raised, both confirmed. The map also labels 0 as Access and 3 as Extended on
+the assumption the ordering continues — neither has been observed yet, so
+correct them if they read wrong.
+
+The two balance ratios respond to cargo, not just faults. With the load area
+full, front balance read 0.99 and rear read 0.92 — the rear axle carrying more
+on one side. Check the ratios unloaded before reading a low number as a leak.
 
 ---
 

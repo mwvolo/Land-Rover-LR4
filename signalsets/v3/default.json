@@ -1,4 +1,12 @@
 { "commands": [
+{ "hdr": "716", "rax": "71E", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TPMS_SEEK_716", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 5, "mul": 0.01373, "nullmin": 0, "unit": "bars" }, "name": "TPMS Seek 716"}
+  ]},
+{ "hdr": "726", "rax": "72E", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TPMS_SEEK_726", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 5, "mul": 0.01373, "nullmin": 0, "unit": "bars" }, "name": "TPMS Seek 726"}
+  ]},
 { "hdr": "732", "cmd": {"22": "D928"}, "freq": 1,
   "signals": [
     {"id": "LR4_GEAR_SELECTOR", "path": "Transmission", "name": "Gear Selector", "fmt": {"len": 8, "map": {
@@ -9,6 +17,18 @@
           "7": { "description": "Sport",   "value": "Sport" }
         }}
     }
+  ]},
+{ "hdr": "734", "rax": "73C", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TPMS_SEEK_734", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 5, "mul": 0.01373, "nullmin": 0, "unit": "bars" }, "name": "TPMS Seek 734"}
+  ]},
+{ "hdr": "737", "rax": "73F", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TPMS_SEEK_737", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 5, "mul": 0.01373, "nullmin": 0, "unit": "bars" }, "name": "TPMS Seek 737"}
+  ]},
+{ "hdr": "760", "rax": "768", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TPMS_SEEK_760", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 5, "mul": 0.01373, "nullmin": 0, "unit": "bars" }, "name": "TPMS Seek 760"}
   ]},
 { "hdr": "761", "rax": "769", "cmd": {"22": "197C"}, "freq": 1,
   "signals": [
@@ -62,6 +82,10 @@
   "signals": [
     {"id": "LR4_1E89_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E89 Raw"}
   ]},
+{ "hdr": "797", "rax": "79F", "cmd": {"22": "2076"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_TPMS_SEEK_797", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 5, "mul": 0.01373, "nullmin": 0, "unit": "bars" }, "name": "TPMS Seek 797"}
+  ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "2B12"}, "freq": 1,
   "signals": [
     {"id": "LR4_SUSPENSION_2B12", "path": "Suspension", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "millimeters" }, "name": "Suspension Height Offset"}
@@ -108,7 +132,13 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B3C"}, "freq": 1,
   "signals": [
-    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height Mode"}
+    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "name": "Ride Height Mode", "fmt": {"len": 8, "map": {
+          "0": { "description": "Access",   "value": "Access" },
+          "1": { "description": "Normal",   "value": "Normal" },
+          "2": { "description": "Off-Road", "value": "Off-Road" },
+          "3": { "description": "Extended", "value": "Extended" }
+        }}
+    }
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 1,
   "signals": [
@@ -116,11 +146,11 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B71"}, "freq": 1,
   "signals": [
-    {"id": "LR4_RIDE_HEIGHT_FRONT", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height Front"}
+    {"id": "LR4_RIDE_HEIGHT_FRONT", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Height Sensor Front (inverted)"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B72"}, "freq": 1,
   "signals": [
-    {"id": "LR4_RIDE_HEIGHT_REAR", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height Rear"}
+    {"id": "LR4_RIDE_HEIGHT_REAR", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Height Sensor Rear (inverted)"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "D11A"}, "freq": 1,
   "signals": [
