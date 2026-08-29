@@ -10,21 +10,29 @@
         }}
     }
   ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2076"}, "freq": 5,
+{ "hdr": "761", "rax": "769", "cmd": {"22": "197C"}, "freq": 1,
   "signals": [
-    {"id": "LR4_TP_FL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Left Tire Pressure", "suggestedMetric": "frontLeftTirePressure"}
+    {"id": "LR4_197C_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "197C Raw"}
   ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2077"}, "freq": 5,
+{ "hdr": "761", "rax": "769", "cmd": {"22": "D11C"}, "freq": 1,
   "signals": [
-    {"id": "LR4_TP_FR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Front Right Tire Pressure", "suggestedMetric": "frontRightTirePressure"}
+    {"id": "LR4_D11C_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "D11C Raw"}
   ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2078"}, "freq": 5,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 5,
   "signals": [
-    {"id": "LR4_TP_RR", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Right Tire Pressure", "suggestedMetric": "rearRightTirePressure"}
+    {"id": "LR4_2A32_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A32 Raw"}
   ]},
-{ "hdr": "751", "rax": "759", "cmd": {"22": "2079"}, "freq": 5,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A33"}, "freq": 5,
   "signals": [
-    {"id": "LR4_TP_RL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Left Tire Pressure", "suggestedMetric": "rearLeftTirePressure"}
+    {"id": "LR4_2A33_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A33 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A34"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A34_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A34 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A35"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A35_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A35 Raw"}
   ]},
 { "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 5,
   "signals": [
@@ -38,9 +46,33 @@
   "signals": [
     {"id": "LR4_2A38_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A38 Raw"}
   ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A39"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A39_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A39 Raw"}
+  ]},
 { "hdr": "792", "rax": "79A", "cmd": {"22": "2A3A"}, "freq": 5,
   "signals": [
     {"id": "LR4_2A3A_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3A Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3B"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A3B_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3B Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3C"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A3C_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3C Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3D"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A3D_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3D Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3E"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A3E_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3E Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3F"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A3F_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3F Raw"}
   ]},
 { "hdr": "795", "cmd": {"22": "1E8A"}, "freq": 0.5,
   "signals": [
@@ -48,7 +80,7 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "2B12"}, "freq": 1,
   "signals": [
-    {"id": "LR4_SUSPENSION_2B12", "path": "Suspension", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "scalar" }, "name": "Suspension 2B12"}
+    {"id": "LR4_SUSPENSION_2B12", "path": "Suspension", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "millimeters" }, "name": "Suspension Height Offset"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B03"}, "freq": 1,
   "signals": [
@@ -72,7 +104,7 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "D11A"}, "freq": 1,
   "signals": [
-    {"id": "LR4_SUSPENSION_D11A", "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Suspension D11A"}
+    {"id": "LR4_SUSPENSION_SUPPLY_V", "path": "Suspension", "fmt": { "len": 8, "max": 40.8, "mul": 16, "div": 100, "unit": "volts" }, "name": "Suspension Module Voltage"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "033E"}, "freq": 1,
   "signals": [
@@ -93,6 +125,10 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "0520"}, "freq": 1,
   "signals": [
     {"id": "LR4_CHARGE_AIR_TEMP", "path": "Engine", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Charge Air Temp"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "DD01"}, "freq": 0.2,
+  "signals": [
+    {"id": "LR4_ODOMETER", "path": "Trips", "fmt": { "len": 24, "max": 16777215, "unit": "kilometers" }, "name": "Odometer", "suggestedMetric": "odometer"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F404"}, "freq": 1,
   "signals": [
