@@ -268,8 +268,51 @@ predictably with height. Read `22F433` directly:
 | 10,000 ft | 70 kPa | 10.1 |
 | 12,000 ft | 64 kPa | 9.3 |
 
-Roughly 1 kPa per 300 ft in this range. Weather shifts it a few kPa, so treat
+Roughly 1 kPa per 300 ft near sea level, stretching to about 340 ft
+per kPa above 8,000 ft. Weather shifts it a few kPa, so treat
 it as approximate unless you calibrate against a known elevation.
+
+### Measured on this truck
+
+From the September 2025 mountain trip, barometric pressure ranged **65–76 kPa,
+median 70** — roughly 7,800 to 11,800 ft, spending most of its time near
+10,000. Those runs give real baselines to compare against:
+
+| Signal | Mountains, Sept 2025 | Notes |
+|---|---|---|
+| Charge Air Temp | 6–81°C, median 47 | Wide swing with grade and airflow |
+| Gearbox Temp | 8–85°C, median 64 | Never troubling |
+| Diff Temp | 0–60°C, median 35 | Cooler than a hot-weather lowland drive |
+| Coolant Temp | up to 103°C | Normal ceiling on sustained climbs |
+| Mass Air Flow | peak 216 g/s | Full-load airflow |
+
+Worth noting the differential ran *hotter* on flat August driving (median
+71°C) than in the mountains (35°C). Ambient temperature matters more to it
+than terrain does.
+
+### Fuel trim climbs with altitude
+
+Long term fuel trim tracks altitude clearly across ~76,000 logged samples:
+
+| Barometric | Altitude | Median LTFT |
+|---|---|---|
+| 100 kPa | ~400 ft | +8.6% |
+| 80 kPa | ~6,400 ft | +7.8% |
+| 75 kPa | ~7,900 ft | +12.5% |
+| 70 kPa | ~9,400 ft | +14.1% |
+| 65 kPa | ~10,900 ft | +14.8% |
+
+Altitude adding fuel trim is expected — the mass air flow sensor tends to
+under-report in thin air and the ECU compensates. **The part worth watching
+is the low-altitude baseline of around +8%.** A healthy engine sits within
+±5%, so there's a mild lean condition present before altitude adds anything,
+and the two stack: near +15% at 11,000 ft is approaching where a lean code
+would set.
+
+Most likely cause on this engine is a small unmetered air leak — the
+supercharged V6 has a lot of intake plumbing and hose joints. Not urgent, but
+if the truck ever feels flat at altitude, this is the reason to look at
+first.
 
 ### What altitude does to the engine
 
