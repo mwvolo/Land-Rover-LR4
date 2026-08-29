@@ -10,17 +10,13 @@
         }}
     }
   ]},
-{ "hdr": "751", "rax": "759", "eax": "2A", "tst": "2A", "tmo": "96", "fcm1": true, "cmd": {"22": "2076"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_TPMS_EAX2A", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 5, "mul": 0.01373, "nullmin": 0, "unit": "bars" }, "name": "TPMS Probe eax 2A"}
-  ]},
 { "hdr": "761", "rax": "769", "cmd": {"22": "197C"}, "freq": 1,
   "signals": [
     {"id": "LR4_197C_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "197C Raw"}
   ]},
 { "hdr": "761", "rax": "769", "cmd": {"22": "D11C"}, "freq": 1,
   "signals": [
-    {"id": "LR4_D11C_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "D11C Raw"}
+    {"id": "LR4_D11C_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "D11C Raw"}
   ]},
 { "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 5,
   "signals": [
@@ -58,41 +54,13 @@
   "signals": [
     {"id": "LR4_2A3A_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A3A Raw"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3B"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_2A3B_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A3B Raw"}
-  ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3C"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_2A3C_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A3C Raw"}
-  ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3D"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_2A3D_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A3D Raw"}
-  ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3E"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_2A3E_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A3E Raw"}
-  ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3F"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_2A3F_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A3F Raw"}
-  ]},
 { "hdr": "795", "cmd": {"22": "1E8A"}, "freq": 0.5,
   "signals": [
     {"id": "LR4_REAR_DIFF_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 150, "min": -40, "add": -40, "unit": "celsius" }, "name": "Locking Diff Oil Temp"}
   ]},
-{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E88"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_1E88_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E88 Raw"}
-  ]},
 { "hdr": "795", "rax": "79D", "cmd": {"22": "1E89"}, "freq": 1,
   "signals": [
     {"id": "LR4_1E89_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E89 Raw"}
-  ]},
-{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E8B"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_1E8B_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E8B Raw"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "2B12"}, "freq": 1,
   "signals": [
@@ -132,15 +100,7 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B08"}, "freq": 1,
   "signals": [
-    {"id": "LR4_3B08_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B08 Raw"}
-  ]},
-{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B09"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_3B09_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B09 Raw"}
-  ]},
-{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B0A"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_3B0A_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B0A Raw"}
+    {"id": "LR4_3B08_RAW", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "3B08 Raw"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B0B"}, "freq": 1,
   "signals": [
@@ -148,7 +108,7 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B3C"}, "freq": 1,
   "signals": [
-    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height"}
+    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "Ride Height Mode"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 1,
   "signals": [
@@ -294,13 +254,9 @@
   "signals": [
     {"id": "LR4_OIL_TEMP_SAE", "path": "Engine", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Oil Temp (SAE)"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F45E"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_FUEL_RATE", "path": "Fuel", "fmt": { "len": 16, "max": 3276.75, "div": 20, "nullmin": 0, "unit": "litersPerHour" }, "name": "Fuel Rate", "suggestedMetric": "fuelRate"}
-  ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E68"}, "freq": 1,
   "signals": [
-    {"id": "LR4_1E68_RAW", "path": "Transmission", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E68 Raw"}
+    {"id": "LR4_1E68_RAW", "path": "Transmission", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "1E68 Raw"}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E69"}, "freq": 0.5,
   "signals": [
@@ -308,15 +264,7 @@
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E6A"}, "freq": 1,
   "signals": [
-    {"id": "LR4_1E6A_RAW", "path": "Transmission", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E6A Raw"}
-  ]},
-{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E6B"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_1E6B_RAW", "path": "Transmission", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E6B Raw"}
-  ]},
-{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E70"}, "freq": 1,
-  "signals": [
-    {"id": "LR4_1E70_RAW", "path": "Transmission", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "1E70 Raw"}
+    {"id": "LR4_1E6A_RAW", "path": "Transmission", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "1E6A Raw"}
   ]}
 ],
 "synthetics": [
