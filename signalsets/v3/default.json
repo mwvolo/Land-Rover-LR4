@@ -1,19 +1,31 @@
 { "commands": [
-{ "hdr": "710", "cmd": {"22": "3B03"}, "freq": 1,
+{ "hdr": "710", "rax": "7DB", "cmd": {"22": "2B12"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_2B12", "path": "Suspension", "fmt": { "len": 16, "max": 32767, "min": -32768, "sign": true, "unit": "scalar" }, "name": "Suspension 2B12"}
+  ]},
+{ "hdr": "710", "rax": "7DB", "cmd": {"22": "3B03"}, "freq": 1,
   "signals": [
     {"id": "LR4_SUSPENSION_PRES_FR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Right"}
   ]},
-{ "hdr": "710", "cmd": {"22": "3B04"}, "freq": 1,
+{ "hdr": "710", "rax": "7DB", "cmd": {"22": "3B04"}, "freq": 1,
   "signals": [
     {"id": "LR4_SUSPENSION_PRES_FL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Front Left"}
   ]},
-{ "hdr": "710", "cmd": {"22": "3B05"}, "freq": 1,
+{ "hdr": "710", "rax": "7DB", "cmd": {"22": "3B05"}, "freq": 1,
   "signals": [
     {"id": "LR4_SUSPENSION_PRES_RR", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Right"}
   ]},
-{ "hdr": "710", "cmd": {"22": "3B06"}, "freq": 1,
+{ "hdr": "710", "rax": "7DB", "cmd": {"22": "3B06"}, "freq": 1,
   "signals": [
     {"id": "LR4_SUSPENSION_PRES_RL", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension Pressure Rear Left"}
+  ]},
+{ "hdr": "710", "rax": "7DB", "cmd": {"22": "3B07"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_3B07", "path": "Suspension", "fmt": {"bix": 8, "len": 8, "max": 51, "div": 5, "unit": "psi" }, "name": "Suspension 3B07"}
+  ]},
+{ "hdr": "710", "rax": "7DB", "cmd": {"22": "D11A"}, "freq": 1,
+  "signals": [
+    {"id": "LR4_SUSPENSION_D11A", "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Suspension D11A"}
   ]},
 { "hdr": "732", "cmd": {"22": "D928"}, "freq": 1,
   "signals": [
