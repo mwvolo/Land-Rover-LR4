@@ -54,6 +54,22 @@
   "signals": [
     {"id": "LR4_TP_RL", "path": "Tires", "fmt": {"bix": 8, "len": 8, "max": 3.5, "mul": 0.01373, "unit": "bars" }, "name": "Rear Left Tire Pressure", "suggestedMetric": "rearLeftTirePressure"}
   ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A36_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A36 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A37"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A37_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A37 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A38"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A38_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A38 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3A"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_2A3A_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3A Raw"}
+  ]},
 { "hdr": "795", "cmd": {"22": "1E8A"}, "freq": 0.5,
   "signals": [
     {"id": "LR4_REAR_DIFF_TEMP", "path": "Drivetrain", "fmt": { "len": 8, "max": 150, "min": -40, "add": -40, "unit": "celsius" }, "name": "Locking Diff Oil Temp"}
