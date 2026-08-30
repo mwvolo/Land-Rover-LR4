@@ -58,6 +58,7 @@ shows up normally. Most of this file uses that trick.
 | Coolant Temp | `7E0` `22F405` | Thermostat opens ~88°C; normal running 90–105°C |
 | Manifold Pressure | `7E0` `22F40B` | **Absolute**, not gauge. See boost calculation below |
 | Barometric Pressure | `7E0` `22F433` | ~101 kPa at sea level, drops with altitude |
+| Altitude | `7E0` `22F433` | Barometric converted to feet by lookup table |
 | Intake Air Temp | `7E0` `22F40F` | Before the supercharger |
 | Charge Air Temp | `7E0` `220520` | **After** the supercharger and intercooler |
 | Timing Advance | `7E0` `22F40E` | Degrees before top dead centre |
@@ -67,6 +68,7 @@ shows up normally. Most of this file uses that trick.
 | Mass Air Flow | `7E0` `22F410` | Grams of air per second |
 | Equivalence Ratio | `7E0` `22F444` | Commanded lambda |
 | O2 Lambda B1S1 | `7E0` `22F434` | Measured lambda |
+| O2 Sensor Voltage | `7E0` `22F434` | Second half of the same response |
 | Catalyst Temp B1S1 / B2S1 | `7E0` `22F43C` / `22F43D` | One per bank |
 | Oil Temp | `7E0` `2203F3` | Land Rover's own sensor |
 | Oil Temp (SAE) | `7E0` `22F45C` | Standard PID, same physical sensor |
@@ -93,7 +95,6 @@ fuel cut — injectors fully off while coasting, sensor reading pure air.
 | Signal | Address | Notes |
 |---|---|---|
 | Fuel Level | `7E0` `22F42F` | |
-| Fuel Rate | `7E0` `22F45E` | Litres per hour |
 | Fuel Rail Pressure | `7E0` `22033E` | Proprietary; ~60 bar idle, 130+ under load |
 | Fuel Rail Pressure (SAE) | `7E0` `22F423` | Standard PID, same rail |
 | Short Term Fuel Trim B1 | `7E0` `22F406` | Immediate correction, swings constantly |
@@ -120,6 +121,9 @@ All four corners report gauge pressure in the air spring.
 | Pressure Front Left / Right | `7D3` `223B04` / `223B03` |
 | Pressure Rear Left / Right | `7D3` `223B06` / `223B05` |
 | Height Offset | `7D3` `222B12` | Signed, millimetres from nominal |
+| Compressor Activity | `7D3` `223B07` | ~110 at rest, over 1,300 while the truck raises |
+| Ride Height Mode | `7D3` `223B3C` | 1 normal, 2 raised — both confirmed |
+| Height Sensor Front / Rear | `7D3` `223B71` / `223B72` | **Inverted** — falls as the truck rises |
 | Module Voltage | `7D3` `22D11A` | Should mirror battery voltage |
 
 Normal standing pressures are roughly 40 psi per corner at normal ride
@@ -401,11 +405,11 @@ formulas eventually get worked out.
 
 | Address | Signals |
 |---|---|
-| `792` / `79A` | `2A32`–`2A3F` — `2A36`, `2A37`, `2A38`, `2A3A` return data; the rest are a sweep |
-| `795` / `79D` | `1E88`, `1E89`, `1E8B` — neighbours of the differential temp |
-| `7E1` / `7E9` | `1E68`, `1E6A`, `1E6B`, `1E70` — neighbours of the gearbox temp |
+| `792` / `79A` | `2A32`–`2A3A` — eight live values, none resembling tire pressures |
+| `795` / `79D` | `1E89` |
+| `7E1` / `7E9` | `1E68`, `1E6A` — neighbours of the gearbox temp |
 | `761` / `769` | `197C`, `D11C` |
-| `7D3` / `7DB` | `3B07` — reads lower than the four corner pressures |
+| `7D3` / `7DB` | `3B00`, `3B01`, `3B02`, `3B08`, `3B0B` — `3B02` answers four single-byte values that look like one per corner |
 
 **Tire pressures remain unsolved, but they exist.** Module `751` returns no
 data to any request, and nothing found so far resembles four tire pressures.
@@ -431,6 +435,54 @@ correct them if they read wrong.
 The two balance ratios respond to cargo, not just faults. With the load area
 full, front balance read 0.99 and rear read 0.92 — the rear axle carrying more
 on one side. Check the ratios unloaded before reading a low number as a leak.
+
+---
+
+## Polling
+
+The adapter sustains about **13 request/response round trips per second**,
+measured across many hours of logging. That is the ELM327's ceiling, not the
+CAN bus — 13 requests per second is negligible against 500 kbit/s, and
+diagnostic identifiers in the `7xx` range are low priority by CAN arbitration,
+so they yield to powertrain traffic automatically. Service `22` is read-only.
+Polling cannot harm anything; it can only compete with itself.
+
+**`freq` is a minimum interval in seconds, not a rate.** Pelican documents it as
+the maximum frequency at which a command may be sent, expressed in seconds, so
+a *smaller* number polls *harder*. There is no priority field anywhere in the
+v3 format — command count and `freq` are the only levers.
+
+The budget in this file:
+
+| Interval | Commands | Contents |
+|---|---|---|
+| 1s | 4 | Manifold pressure, barometric, engine speed, vehicle speed |
+| 3s | 8 | Throttle, pedals, timing, lambda, load |
+| 5s | 12 | Temperatures, fuel trims, mass air flow |
+| 10s | 16 | Air suspension |
+| 30s | 8 | Fuel level, battery, catalyst temperatures |
+| 120s | 14 | Undecoded probes |
+| 600s | 3 | Odometer, oil level, oil volume |
+
+That totals about 11 requests per second of demand against roughly 11 available
+once protocol overhead is removed. The four one-second commands exist so the
+boost calculation stays responsive.
+
+**Two known inefficiencies**, neither fixable from a signalset:
+
+Requests carry no expected-response count. The ELM327 datasheet documents that
+appending a digit (`22F405 1`) lets the adapter return the instant it has that
+many responses instead of waiting out the full timeout, and shows it nearly
+doubling throughput. No request in this vehicle's history uses it.
+
+Sparse headers cost triple. Reading one value from a module means `ATSH`, then
+a receive filter, then the read — three round trips for one number. The engine
+module amortises this well at 0.12 setup commands per read; a header carrying a
+single command pays 2.0.
+
+Multi-DID requests would help most — a single frame holds seven payload bytes,
+enough for `22` plus three identifiers — but the schema caps `cmd` at one
+identifier, so the format cannot express it.
 
 ---
 
