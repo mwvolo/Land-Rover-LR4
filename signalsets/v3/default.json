@@ -72,7 +72,7 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B01"}, "freq": 1,
   "signals": [
-    {"id": "LR4_3B01_RAW", "path": "Suspension", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "3B01 Raw"}
+    {"id": "LR4_3B01_RAW", "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "nullmin": 0, "unit": "scalar" }, "name": "3B01 Raw"}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B02"}, "freq": 1,
   "signals": [
