@@ -24,9 +24,9 @@ from `rax`.
 | `716` | `71E` | Unmined |
 | `726` | `72E` | Unmined — returns the VIN |
 | `732` | `73A` | Gear selector |
-| `734` | `73C` | Unmined |
+| `734` | `73C` | Headlamp control module (HCM) |
 | `737` | `73F` | Unmined |
-| `760` | `768` | Unmined |
+| `760` | `768` | ABS / brake control module (probable) |
 | `761` | `769` | Body / instrument |
 | `792` | `79A` | Unidentified — answers `2A3x` |
 | `795` | `79D` | Rear differential |
@@ -45,6 +45,35 @@ sitting at the other offset.
 Pelican handles standard PIDs internally, so a signalset entry for `012F`
 never surfaces in the app. The `F4xx` alias arrives as a custom signal and
 shows up normally. Most of this file uses that trick.
+
+### Module identification (2026-09-19)
+
+A UDS identification probe (`22F18C` ECU serial, `22F191` ECU part number)
+was run against all six previously unmined modules:
+
+| Module | `F18C` serial | `F191` part number |
+|---|---|---|
+| `716` | `0000000004757126` | rejected (NRC 31) |
+| `726` | `5224293808` | rejected (NRC 31) |
+| `734` | `0080-508580` | `EX53-14C243-AB` |
+| `737` | `Q117eeA3516` | rejected (NRC 31) |
+| `760` | `1716263MO0507` | `CH32-14C227-AB` |
+| `797` | `0-00002C` | rejected (NRC 31) |
+
+`734`'s part number is a Hella `14C243` headlamp levelling / adaptive front
+lighting controller, the same base number used across Jaguar Land Rover
+platforms of this era (it also shows up as `8W83-14C243-AA` on the Jaguar
+XK) — identified as the Headlamp control module (HCM). `760`'s part number
+matches the ABS/brake module in a published Discovery 4 (L319) ECU scan
+report; that identification rests on a single external scan report, so
+treat it as probable rather than confirmed. The other four modules didn't
+resolve a part number, but each returned a distinct serial, so they're
+confirmed to be real, separate modules even though what they do is still
+unknown.
+
+`22F187` was also tried against all six and came back NRC 31 (request out
+of range) everywhere except `726`, whose reply was malformed and returned
+VIN bytes instead of a rejection — worth a retry.
 
 ---
 
@@ -409,7 +438,12 @@ formulas eventually get worked out.
 | `795` / `79D` | `1E89` |
 | `7E1` / `7E9` | `1E68`, `1E6A` — neighbours of the gearbox temp |
 | `761` / `769` | `197C`, `D11C` |
+| `726` / `72E` | `0202` — returns `00` |
 | `7D3` / `7DB` | `3B00`, `3B01`, `3B02`, `3B08`, `3B0B` — `3B02` answers four single-byte values that look like one per corner |
+
+`726`'s `0202` came out of a sweep of DIDs `0000`–`03FF` against that module
+(916 requests) — the one hit, and the first non-identification DID ever
+found there.
 
 **Tire pressures remain unsolved, but they exist.** Module `751` returns no
 data to any request, and nothing found so far resembles four tire pressures.
@@ -467,6 +501,24 @@ The budget in this file:
 That totals about 11 requests per second of demand against roughly 11 available
 once protocol overhead is removed. The four one-second commands exist so the
 boost calculation stays responsive.
+
+### What actually gets polled
+
+The signalset defined 52 commands when a scan-log audit through 2026-09-19
+found only about 20 receiving meaningful traffic on a drive. Five commands
+received zero polls in the preceding ten days: `7E0/033E`, `7E0/F407`,
+`7E0/F423`, `761/197C`, `761/D11C`.
+
+Starvation is worst for `7E0/F40C` (Engine Speed): it's set to `freq` 1, the
+same as Vehicle Speed, but logged 12 samples in ten days against Vehicle
+Speed's 17,130. Timing Advance (`F40E`), Absolute Load (`F443`), and both
+accelerator pedal signals (`F449`, `F44A`) are also in single digits over the
+same period.
+
+This hasn't been traced to a cause — it's an observation, not a diagnosis.
+The practical consequence is that adding commands without removing others
+makes it worse: new probes should be traded against deletions, not added on
+top.
 
 **Two known inefficiencies**, neither fixable from a signalset:
 
