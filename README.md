@@ -542,6 +542,37 @@ file, `f782e4d` briefly introducing fractional values such as `0.5` before
 built from that intermediate state is untested. Before changing anything
 here, confirm which version of this signalset the app actually holds.
 
+### Probes added to test that conclusion
+
+Seven commands were added on 2026-09-20 specifically to be watched rather
+than trusted. Total demand rises to 10.76 req/s, still inside the budget.
+
+`7E0/1153` and `7E0/1154` are a charging-voltage pair at 1/256 V. `1154`
+rests at exactly `0E00`, 14.00 V, which reads as a regulator setpoint rather
+than a measurement; `1153` floats 13.94-14.12 V around it and both drop to
+5.7-10.1 V on crank. They do not track `F442`, which drifted 13.0-14.5 V
+across the same session, so this is a different node and at better
+resolution. Both were dropped as dead probes in `1cf20db`; the logs
+contradict that, and every sample behind the original call was taken parked.
+
+`7E0/F408` and `7E0/F409` are the bank-2 fuel trims. They have never been
+requested on this vehicle. If they answer, the bank asymmetry becomes
+directly measurable instead of inferred, which matters more now that `F407`
+has been silent since 2026-09-01.
+
+`7E0/113F` and `7E1/2104` are undecoded single bytes that move: `113F` drifts
+77-80 and `2104` climbs 56-64 while parked and running. Both are recorded as
+raw scalars because a plain degrees-Celsius reading and a reading with the
+usual -40 offset are both physically plausible, and parked data cannot
+separate them.
+
+`726/0202` is the one hit from the `0000`-`03FF` sweep of that module.
+
+These also double as a test of the scheduler: `F41F` duplicates standard PID
+`011F`, which the app already polls 1560 times a drive. If `F41F` records and
+`F40C` still does not, the alias mechanism works and something specific to
+those eight commands does not.
+
 **Two known inefficiencies**, neither fixable from a signalset:
 
 Requests carry no expected-response count. The ELM327 datasheet documents that

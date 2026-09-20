@@ -10,6 +10,10 @@
         }}
     }
   ]},
+{ "hdr": "726", "rax": "72E", "cmd": {"22": "0202"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_726_0202_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "726 0202 Raw"}
+  ]},
 { "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 30,
   "signals": [
     {"id": "LR4_2A36_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A36 Distance Counter"}
@@ -103,6 +107,18 @@
   "signals": [
     {"id": "LR4_ODOMETER", "path": "Trips", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "kilometers" }, "name": "Odometer", "suggestedMetric": "odometer"}
   ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1153"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_CHARGE_V", "path": "Engine", "fmt": { "len": 16, "max": 65.535, "div": 256, "unit": "volts" }, "name": "Charging Voltage"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1154"}, "freq": 5,
+  "signals": [
+    {"id": "LR4_CHARGE_V_TARGET", "path": "Engine", "fmt": { "len": 16, "max": 65.535, "div": 256, "unit": "volts" }, "name": "Charging Voltage Target"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "113F"}, "freq": 30,
+  "signals": [
+    {"id": "LR4_113F_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "113F Raw"}
+  ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F404"}, "freq": 3,
   "signals": [
     {"id": "LR4_LOAD_CALC", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Calculated Load", "suggestedMetric": "engineLoad"}
@@ -118,6 +134,14 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F407"}, "freq": 5,
   "signals": [
     {"id": "LR4_LONGFT1", "path": "Fuel", "fmt": { "len": 8, "max": 99.2, "min": -100, "mul": 100, "div": 128, "add": -100, "unit": "percent" }, "name": "Long Term Fuel Trim B1"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F408"}, "freq": 30,
+  "signals": [
+    {"id": "LR4_SHRTFT2", "path": "Fuel", "fmt": { "len": 8, "max": 99.2, "min": -100, "mul": 100, "div": 128, "add": -100, "unit": "percent" }, "name": "Short Term Fuel Trim B2"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F409"}, "freq": 30,
+  "signals": [
+    {"id": "LR4_LONGFT2", "path": "Fuel", "fmt": { "len": 8, "max": 99.2, "min": -100, "mul": 100, "div": 128, "add": -100, "unit": "percent" }, "name": "Long Term Fuel Trim B2"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40B"}, "freq": 1,
   "signals": [
@@ -269,6 +293,10 @@
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E68"}, "freq": 30,
   "signals": [
     {"id": "LR4_1E68_RAW", "path": "Transmission", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "1E68 Raw (varies most)"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "2104"}, "freq": 30,
+  "signals": [
+    {"id": "LR4_2104_RAW", "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "2104 Raw"}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E69"}, "freq": 5,
   "signals": [

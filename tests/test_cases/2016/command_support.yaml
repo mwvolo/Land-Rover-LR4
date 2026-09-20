@@ -1,5 +1,7 @@
 model_year: 2016
 supported_commands_by_ecu:
+  "726":
+  - "726.220202"
   "732":
   - 732.22D928
   "7DF":
@@ -84,6 +86,9 @@ supported_commands_by_ecu:
   - 0170:BP_A,BP_A_ACT,BP_A_ACT_SUP,BP_A_CMD,BP_A_CMD_SUP,BP_A_SUP,BP_B,BP_B_ACT,BP_B_ACT_SUP,BP_B_CMD,BP_B_CMD_SUP,BP_B_SUP
   - 7E0.22033E
   - 7E0.220520
+  - 7E0.22113F
+  - 7E0.221153
+  - 7E0.221154
   - 7E0.22F18C
   - 7E0.22F40C
   - 7E0.22F41F
@@ -119,6 +124,7 @@ supported_commands_by_ecu:
   - 7E1.7E9.0133
   - 7E1.7E9.0142
   - 7E1.7E9.015A
+  - 7E1.7E9.222104
   "7E8":
   - 7E8.0103
   - 7E8.0104
