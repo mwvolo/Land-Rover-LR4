@@ -10,6 +10,210 @@
         }}
     }
   ]},
+{ "hdr": "761", "rax": "769", "cmd": {"22": "197C"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_197C_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "197C Raw"}
+  ]},
+{ "hdr": "761", "rax": "769", "cmd": {"22": "D11C"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_D11C_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "D11C Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A32_RAW", "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A32 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A33"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A33_RAW", "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A33 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A34"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A34_RAW", "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A34 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A35"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A35_RAW", "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A35 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A37"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A37_RAW", "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A37 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A38"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A38_RAW", "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A38 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A39"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A39_RAW", "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A39 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3A"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A3A_RAW", "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3A Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3B"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A3B_RAW", "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A3B Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3C"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A3C_RAW", "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3C Raw"}
+  ]},
+{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E88"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1E88_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E88 Raw"}
+  ]},
+{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E89"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1E89_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E89 Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B00"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_3B00_RAW", "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B00 Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B01"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_3B01_RAW", "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B01 Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B08"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_3B08_RAW", "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B08 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1044"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1044_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1044 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "10E0"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_10E0_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "10E0 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "112C"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_112C_RAW", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "112C Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1139"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_1139_RAW", "path": "Engine", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "1139 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1151"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_1151_RAW", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1151 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1152"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1152_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1152 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1155"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1155_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1155 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1156"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_1156_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1156 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1158"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1158_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1158 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1159"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_1159_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1159 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "115B"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_115B_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "115B Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1160"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1160_RAW", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1160 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1164"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_1164_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1164 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "1187"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1187_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1187 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11BA"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_11BA_RAW", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "11BA Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11BB"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_11BB_RAW", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "11BB Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11BD"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_11BD_RAW", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "11BD Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11BE"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_11BE_RAW", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "11BE Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11C4"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_11C4_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "11C4 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11C5"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_11C5_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "11C5 Raw"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "11CC"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_11CC_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "11CC Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0302"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_0302_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "0302 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0303"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_0303_RAW", "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "0303 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0304"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_0304_RAW", "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "0304 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0305"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_0305_RAW", "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "0305 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "0805"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_0805_RAW", "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "0805 Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "101A"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_101A_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "101A Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E6A"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1E6A_RAW", "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1E6A Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "210F"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_210F_RAW", "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "210F Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "2B1B"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2B1B_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "2B1B Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "2B1C"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2B1C_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "2B1C Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "2B1D"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2B1D_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "2B1D Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "2B1E"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2B1E_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "2B1E Raw"}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "DD01"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_DD01_RAW", "path": "Drivetrain", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "DD01 Raw"}
+  ]},
 { "hdr": "726", "rax": "72E", "cmd": {"22": "0202"}, "freq": 60,
   "signals": [
     {"id": "LR4_726_0202_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "726 0202 Raw"}
