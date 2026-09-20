@@ -99,8 +99,7 @@ VIN bytes instead of a rejection — worth a retry.
 | O2 Lambda B1S1 | `7E0` `22F434` | Measured lambda |
 | O2 Sensor Voltage | `7E0` `22F434` | Second half of the same response |
 | Catalyst Temp B1S1 / B2S1 | `7E0` `22F43C` / `22F43D` | One per bank |
-| Oil Temp | `7E0` `2203F3` | Land Rover's own sensor |
-| Oil Temp (SAE) | `7E0` `22F45C` | Standard PID, same physical sensor |
+| Oil Temp | `7E0` `2203F3` | Land Rover's own sensor. The SAE alias `F45C` was dropped — 1,169 samples against this one's 347,015 |
 | Oil Level | `7E0` `2203E6` | Millimetres in the sump |
 | Oil Volume | `7E0` `2203F2` | |
 
@@ -124,8 +123,7 @@ fuel cut — injectors fully off while coasting, sensor reading pure air.
 | Signal | Address | Notes |
 |---|---|---|
 | Fuel Level | `7E0` `22F42F` | |
-| Fuel Rail Pressure | `7E0` `22033E` | Proprietary; ~60 bar idle, 130+ under load |
-| Fuel Rail Pressure (SAE) | `7E0` `22F423` | Standard PID, same rail |
+| Fuel Rail Pressure | `7E0` `22033E` | Proprietary; ~60 bar idle, 130+ under load. The SAE alias `F423` was dropped — 158 samples against this one's 15,910 |
 | Short Term Fuel Trim B1 | `7E0` `22F406` | Immediate correction, swings constantly |
 | Long Term Fuel Trim B1 | `7E0` `22F407` | Learned correction, drifts slowly |
 | Short Term Fuel Trim B2 | `7E0` `22F408` | First recorded 2026-09-20 |
