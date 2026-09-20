@@ -737,6 +737,39 @@ Barometric pressure moved from `freq` 1 to `freq` 5 to pay for this. It does
 not change at 1 Hz, and it was consuming 0.9 req/s of a budget with no slack.
 
 
+### Metric slots, and why sixteen is the ceiling
+
+The schema defines 36 `suggestedMetric` values — the slots Pelican treats as
+connectable. This signalset fills 16. The other 20 break down as:
+
+| Slots | Why they stay empty |
+|---|---|
+| 10 | Electric and hybrid only: state of charge and health, traction battery, charging, electric range, CVT deterioration |
+| 8 | Tire pressure and temperature, which this truck has not yet given up |
+| 2 | `fuelRate` needs PID 5E, which this ECM's own bitmask does not list, and `fuelRange` is a proprietary Ford DID |
+
+Nothing else can be claimed honestly. A synthetic could not rescue `fuelRate`
+either: the only formula operation the schema supports is `ratio`, a plain
+a divided by b with no constant and no scaling, so mass air flow over
+commanded lambda would land in the slot at fourteen-odd times the real value.
+An empty slot is better than a wrong gauge.
+
+Tire pressure is the one worth chasing. Eight of the twenty are tires, and
+`TESTING.md` records what the Jaguar signalset does and what has never been
+tried here.
+
+### Hidden signals
+
+Twenty-nine of the 98 signals carry `hidden: true`: every `*_RAW` probe and
+the `3B02` byte splits. They are still recorded, they simply do not clutter
+the app with values nobody can interpret yet. A probe earns its way out of
+hiding by being decoded and named.
+
+Twenty-three signals carry a `description`, concentrated on the probes and on
+the decoded signals with a catch — the inverted height sensors, the bank 2
+lambda that rails at `FFFF`, altitude being a barometric lookup rather than
+GPS.
+
 ### Safety
 
 Service `22` is read-only by definition and cannot change vehicle state. It
