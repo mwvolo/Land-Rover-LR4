@@ -502,23 +502,45 @@ That totals about 11 requests per second of demand against roughly 11 available
 once protocol overhead is removed. The four one-second commands exist so the
 boost calculation stays responsive.
 
-### What actually gets polled
+### Eight commands stopped being polled on 2026-08-30
 
-The signalset defined 52 commands when a scan-log audit through 2026-09-19
-found only about 20 receiving meaningful traffic on a drive. Five commands
-received zero polls in the preceding ten days: `7E0/033E`, `7E0/F407`,
-`7E0/F423`, `761/197C`, `761/D11C`.
+A scan-log audit through 2026-09-19 found that eight commands in this file
+are never requested on a drive, and have not been since 2026-08-30:
 
-Starvation is worst for `7E0/F40C` (Engine Speed): it's set to `freq` 1, the
-same as Vehicle Speed, but logged 12 samples in ten days against Vehicle
-Speed's 17,130. Timing Advance (`F40E`), Absolute Load (`F443`), and both
-accelerator pedal signals (`F449`, `F44A`) are also in single digits over the
-same period.
+| Command | Signal | Last normal day |
+|---|---|---|
+| `7E0/F40C` | Engine Speed | 2026-08-29, 1155 polls |
+| `7E0/F411` | Throttle Position | 2026-09-04 |
+| `7E0/F40E` | Timing Advance | 2026-08-30 |
+| `7E0/F443` | Absolute Load | 2026-08-30 |
+| `7E0/F449` | Accelerator Pedal D | 2026-08-30 |
+| `7E0/F44A` | Accelerator Pedal E | 2026-08-30 |
+| `7E0/F407` | Long Term Fuel Trim B1 | 2026-09-01 |
+| `7E0/033E` | Fuel Rail Pressure | 2026-09-01 |
 
-This hasn't been traced to a cause — it's an observation, not a diagnosis.
-The practical consequence is that adding commands without removing others
-makes it worse: new probes should be traded against deletions, not added on
-top.
+**No engine speed value has ever reached the signal database**, across
+fourteen months. The `engineSpeed` metric slot is wired to `F40C` and has
+never been filled. The data is on the wire — the app polls standard PID
+`010C` 2511 times in a 39-minute drive — but Pelican consumes standard PIDs
+internally and they never surface as signals, which is the whole reason this
+file uses `F4xx` aliases. The alias is the part that isn't running.
+
+Two synthetics consequently never compute: `LR4_THROTTLE_TRACKING` needs
+`F411`, and `LR4_PEDAL_AGREEMENT` needs `F449` and `F44A`.
+
+Two candidate causes are ruled out. It is not the request budget: total
+demand is 10.21 req/s against the 11-13 the adapter delivers. It is not the
+`freq` values either, because dead commands share tiers with live ones —
+`F40C` and `F40D` are both `freq` 1, and only `F40D` runs; `F411`, `F443`,
+`F449` and `F44A` sit at `freq` 3 alongside `F404`, `F434` and `F444`, which
+all run.
+
+What remains is the app's own scheduling, and the date points at this repo:
+2026-08-30 is when `f782e4d` and `527a47f` re-tiered every `freq` in the
+file, `f782e4d` briefly introducing fractional values such as `0.5` before
+`527a47f` rounded them back to integers. Whether the app cached a schedule
+built from that intermediate state is untested. Before changing anything
+here, confirm which version of this signalset the app actually holds.
 
 **Two known inefficiencies**, neither fixable from a signalset:
 
