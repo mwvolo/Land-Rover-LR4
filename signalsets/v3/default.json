@@ -10,14 +10,6 @@
         }}
     }
   ]},
-{ "hdr": "761", "rax": "769", "cmd": {"22": "197C"}, "freq": 30,
-  "signals": [
-    {"id": "LR4_197C_RAW", "path": "ECU", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "scalar" }, "name": "197C Raw"}
-  ]},
-{ "hdr": "761", "rax": "769", "cmd": {"22": "D11C"}, "freq": 30,
-  "signals": [
-    {"id": "LR4_D11C_RAW", "path": "ECU", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "D11C Raw"}
-  ]},
 { "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 30,
   "signals": [
     {"id": "LR4_2A36_RAW", "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A36 Distance Counter"}
@@ -155,13 +147,21 @@
   "signals": [
     {"id": "LR4_THROTTLE_POS", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Throttle Position", "suggestedMetric": "throttlePosition"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F423"}, "freq": 5,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F41F"}, "freq": 30,
   "signals": [
-    {"id": "LR4_FUEL_RAIL_P_GAUGE", "path": "Fuel", "fmt": { "len": 16, "max": 655350, "mul": 10, "unit": "kilopascal" }, "name": "Fuel Rail Pressure (SAE)"}
+    {"id": "LR4_RUN_TIME", "path": "Engine", "fmt": { "len": 16, "max": 65535, "unit": "seconds" }, "name": "Run Time Since Engine Start"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F421"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_MIL_DIST", "path": "Trips", "fmt": { "len": 16, "max": 65535, "unit": "kilometers" }, "name": "Distance With MIL On"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F42F"}, "freq": 30,
   "signals": [
     {"id": "LR4_FUEL_LEVEL", "path": "Fuel", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Fuel Level", "suggestedMetric": "fuelTankLevel"}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F430"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_WARMUPS", "path": "Trips", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Warm-ups Since Codes Cleared"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F431"}, "freq": 30,
   "signals": [
@@ -266,10 +266,6 @@
   "signals": [
     {"id": "LR4_THROTTLE_CMD", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Commanded Throttle"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F45C"}, "freq": 5,
-  "signals": [
-    {"id": "LR4_OIL_TEMP_SAE", "path": "Engine", "fmt": { "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Oil Temp (SAE)"}
-  ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E68"}, "freq": 30,
   "signals": [
     {"id": "LR4_1E68_RAW", "path": "Transmission", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "1E68 Raw (varies most)"}
@@ -291,9 +287,6 @@
   }},
   { "id": "LR4_PEDAL_AGREEMENT", "path": "Engine", "name": "Pedal Agreement", "max": 3, "unit": "scalar", "formula": {
     "op": "ratio", "a": "LR4_PEDAL_D", "b": "LR4_PEDAL_E"
-  }},
-  { "id": "LR4_RAIL_CROSSCHECK", "path": "Fuel", "name": "Rail Pressure Crosscheck", "max": 3, "unit": "scalar", "formula": {
-    "op": "ratio", "a": "LR4_FUEL_RAIL_P", "b": "LR4_FUEL_RAIL_P_GAUGE"
   }},
   { "id": "LR4_SUSPENSION_BALANCE_F", "path": "Suspension", "name": "Suspension Balance Front", "max": 3, "unit": "scalar", "formula": {
     "op": "ratio", "a": "LR4_SUSPENSION_PRES_FL", "b": "LR4_SUSPENSION_PRES_FR"
