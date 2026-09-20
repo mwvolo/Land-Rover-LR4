@@ -174,9 +174,6 @@ moved" so far only means "never moved while parked."
 | `7E0` | `F41F` | 30 | Run time since start (PID 1F) | Records as a signal - this is the alias-mechanism test against standard 011F |
 | `7E1` | `1E6A` | 600 | Undecoded, constant 00 in 27 samples (all parked) | Drop if still flat after a full drive cycle |
 | `7E1` | `DD01` | 600 | Undecoded, constant 025166 in 1 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `F416` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
-| `7E0` | `F419` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
-| `7E0` | `F41A` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 | `7E0` | `F458` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 | `7E0` | `F466` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 | `7E0` | `F467` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
@@ -184,6 +181,25 @@ moved" so far only means "never moved while parked."
 | `7E0` | `F470` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 
 ---
+
+## Set up for a long drive with off-roading
+
+A two-hour drive with light off-roading on 2026-09-20 was set up to exercise
+the features that short commuter runs never touch. What was re-tiered for it,
+and what to look for afterwards:
+
+| Command | `freq` | What the drive should produce |
+|---|---|---|
+| `7E0/F466` | 5 | Whether the 17.5% disagreement between the two mass airflow sensors holds up under load, or was an idle artifact |
+| `795/1E88`, `795/1E89` | 30 | First data through a rear differential lock cycle. Both have been flat at `0000` and `09C4` on every sample ever taken |
+| `7D3/3B4D` | 10 | Still returns `0` on every sample. A Terrain Response mode change is the only untried thing that would identify it |
+| `7D3/3B01` | 10 | Three single-bit values seen so far. Enough samples across repeated height changes should map bit to height |
+| `7E0/F470` | 15 | Ten undecoded bytes on a supercharged engine, under sustained load for the first time |
+| `7E0/F42E` | 10 | Purge duty against fuel trims over two hours, which is the cleanest test of the stuck-purge-valve hypothesis |
+
+Barometric pressure dropped from `freq` 1 to `freq` 5 to pay for the above.
+It does not change at 1 Hz and was taking 0.9 req/s of a budget that had no
+slack. Total demand is 10.53 req/s across 85 commands.
 
 ## Manual-probe-only DIDs
 
