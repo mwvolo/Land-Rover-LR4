@@ -24,9 +24,9 @@ from `rax`.
 | `716` | `71E` | Unmined |
 | `726` | `72E` | Unmined — returns the VIN |
 | `732` | `73A` | Gear selector |
-| `734` | `73C` | Unmined |
+| `734` | `73C` | Headlamp control module (HCM) |
 | `737` | `73F` | Unmined |
-| `760` | `768` | Unmined |
+| `760` | `768` | ABS / brake control module (probable) |
 | `761` | `769` | Body / instrument |
 | `792` | `79A` | Unidentified — answers `2A3x` |
 | `795` | `79D` | Rear differential |
@@ -45,6 +45,35 @@ sitting at the other offset.
 Pelican handles standard PIDs internally, so a signalset entry for `012F`
 never surfaces in the app. The `F4xx` alias arrives as a custom signal and
 shows up normally. Most of this file uses that trick.
+
+### Module identification (2026-09-19)
+
+A UDS identification probe (`22F18C` ECU serial, `22F191` ECU part number)
+was run against all six previously unmined modules:
+
+| Module | `F18C` serial | `F191` part number |
+|---|---|---|
+| `716` | `0000000004757126` | rejected (NRC 31) |
+| `726` | `5224293808` | rejected (NRC 31) |
+| `734` | `0080-508580` | `EX53-14C243-AB` |
+| `737` | `Q117eeA3516` | rejected (NRC 31) |
+| `760` | `1716263MO0507` | `CH32-14C227-AB` |
+| `797` | `0-00002C` | rejected (NRC 31) |
+
+`734`'s part number is a Hella `14C243` headlamp levelling / adaptive front
+lighting controller, the same base number used across Jaguar Land Rover
+platforms of this era (it also shows up as `8W83-14C243-AA` on the Jaguar
+XK) — identified as the Headlamp control module (HCM). `760`'s part number
+matches the ABS/brake module in a published Discovery 4 (L319) ECU scan
+report; that identification rests on a single external scan report, so
+treat it as probable rather than confirmed. The other four modules didn't
+resolve a part number, but each returned a distinct serial, so they're
+confirmed to be real, separate modules even though what they do is still
+unknown.
+
+`22F187` was also tried against all six and came back NRC 31 (request out
+of range) everywhere except `726`, whose reply was malformed and returned
+VIN bytes instead of a rejection — worth a retry.
 
 ---
 
@@ -409,7 +438,24 @@ formulas eventually get worked out.
 | `795` / `79D` | `1E89` |
 | `7E1` / `7E9` | `1E68`, `1E6A` — neighbours of the gearbox temp |
 | `761` / `769` | `197C`, `D11C` |
+| `726` / `72E` | `0202` — returns `00` |
 | `7D3` / `7DB` | `3B00`, `3B01`, `3B02`, `3B08`, `3B0B` — `3B02` answers four single-byte values that look like one per corner |
+
+`726`'s `0202` came out of a sweep of DIDs `0000`–`03FF` against that module
+(916 requests) — the one hit, and the first non-identification DID ever
+found there.
+
+**The suspension decodes check out.** Replaying every logged sample through
+the formats in this file gives corner pressures of 34-50 psi, a ride height
+offset correctly signed at -91 to +50 mm, and module voltage of 9.12-14.56 V,
+all physically sensible. The exception is `3B4D`, labelled Drive Mode, which
+has returned `0` on all 171 samples ever recorded — either the label or the
+byte offset is wrong.
+
+What the audit could not do is say anything about suspension health. Across
+fourteen months only 36 minutes have all four corner pressures captured
+together, because the `7D3` module receives one or two requests per drive
+despite its `freq` of 10.
 
 **Tire pressures remain unsolved, but they exist.** Module `751` returns no
 data to any request, and nothing found so far resembles four tire pressures.
@@ -467,6 +513,109 @@ The budget in this file:
 That totals about 11 requests per second of demand against roughly 11 available
 once protocol overhead is removed. The four one-second commands exist so the
 boost calculation stays responsive.
+
+### Eight commands stopped being polled on 2026-08-30
+
+A scan-log audit through 2026-09-19 found that eight commands in this file
+are never requested on a drive, and have not been since 2026-08-30:
+
+| Command | Signal | Last normal day |
+|---|---|---|
+| `7E0/F40C` | Engine Speed | 2026-08-29, 1155 polls |
+| `7E0/F411` | Throttle Position | 2026-09-04 |
+| `7E0/F40E` | Timing Advance | 2026-08-30 |
+| `7E0/F443` | Absolute Load | 2026-08-30 |
+| `7E0/F449` | Accelerator Pedal D | 2026-08-30 |
+| `7E0/F44A` | Accelerator Pedal E | 2026-08-30 |
+| `7E0/F407` | Long Term Fuel Trim B1 | 2026-09-01 |
+| `7E0/033E` | Fuel Rail Pressure | 2026-09-01 |
+
+**No engine speed value has ever reached the signal database**, across
+fourteen months. The `engineSpeed` metric slot is wired to `F40C` and has
+never been filled. The data is on the wire — the app polls standard PID
+`010C` 2511 times in a 39-minute drive — but Pelican consumes standard PIDs
+internally and they never surface as signals, which is the whole reason this
+file uses `F4xx` aliases. The alias is the part that isn't running.
+
+Two synthetics consequently never compute: `LR4_THROTTLE_TRACKING` needs
+`F411`, and `LR4_PEDAL_AGREEMENT` needs `F449` and `F44A`.
+
+Two candidate causes are ruled out. It is not the request budget: total
+demand is 10.21 req/s against the 11-13 the adapter delivers. It is not the
+`freq` values either, because dead commands share tiers with live ones —
+`F40C` and `F40D` are both `freq` 1, and only `F40D` runs; `F411`, `F443`,
+`F449` and `F44A` sit at `freq` 3 alongside `F404`, `F434` and `F444`, which
+all run.
+
+What remains is the app's own scheduling, and the date points at this repo:
+2026-08-30 is when `f782e4d` and `527a47f` re-tiered every `freq` in the
+file, `f782e4d` briefly introducing fractional values such as `0.5` before
+`527a47f` rounded them back to integers. Whether the app cached a schedule
+built from that intermediate state is untested. Before changing anything
+here, confirm which version of this signalset the app actually holds.
+
+### Probes added to test that conclusion
+
+Seven commands were added on 2026-09-20 specifically to be watched rather
+than trusted. Total demand rises to 10.76 req/s, still inside the budget.
+
+`7E0/1153` and `7E0/1154` are a charging-voltage pair at 1/256 V. `1154`
+rests at exactly `0E00`, 14.00 V, which reads as a regulator setpoint rather
+than a measurement; `1153` floats 13.94-14.12 V around it and both drop to
+5.7-10.1 V on crank. They do not track `F442`, which drifted 13.0-14.5 V
+across the same session, so this is a different node and at better
+resolution. Both were dropped as dead probes in `1cf20db`; the logs
+contradict that, and every sample behind the original call was taken parked.
+
+`7E0/F408` and `7E0/F409` are the bank-2 fuel trims. They have never been
+requested on this vehicle. If they answer, the bank asymmetry becomes
+directly measurable instead of inferred, which matters more now that `F407`
+has been silent since 2026-09-01.
+
+`7E0/113F` and `7E1/2104` are undecoded single bytes that move: `113F` drifts
+77-80 and `2104` climbs 56-64 while parked and running. Both are recorded as
+raw scalars because a plain degrees-Celsius reading and a reading with the
+usual -40 offset are both physically plausible, and parked data cannot
+separate them.
+
+`726/0202` is the one hit from the `0000`-`03FF` sweep of that module.
+
+These also double as a test of the scheduler: `F41F` duplicates standard PID
+`011F`, which the app already polls 1560 times a drive. If `F41F` records and
+`F40C` still does not, the alias mechanism works and something specific to
+those eight commands does not.
+
+### The debug batch
+
+On 2026-09-20 a further 51 commands went in: one for every DID this truck has
+ever answered that nothing here decodes. Each is a raw scalar at the byte
+width the logs show it returning, named `LR4_<DID>_RAW`. The batch costs
+0.235 req/s and puts total demand at 10.99.
+
+Cadence follows what fourteen months of scan logs show each DID doing:
+
+| `freq` | Count | Behaviour in the logs |
+|---|---|---|
+| 60 | 6 | Genuinely vary — `761/197C`, `761/D11C`, `7E0/112C`, `7E0/1139`, `7E0/11C4`, `7E1/101A` |
+| 120 | 9 | Flip between exactly two values |
+| 600 | 36 | Never moved |
+
+**"Never moved" means never moved while parked.** Every sample behind that
+bottom tier came from a stationary truck, and the three suspension entries
+(`3B00`, `3B01`, `3B08`) were read at a single ride height, where they could
+not have varied even if they encode something. That tier is the weakest
+classification here, which is why it is slow rather than absent.
+
+`761/197C` and `761/D11C` were deleted earlier in this same branch as
+undecoded raws taking zero polls. That was true and also misleading: the
+audit then showed they are among the most variable DIDs on the truck —
+`197C` returns 9 distinct values in 14 samples, `D11C` ranges `3A` to `41`,
+which would be a plausible temperature. They were starved, not dead, and
+they are back at `freq` 60.
+
+A DID that moves on a real drive earns a proper decode. One that stays flat
+through a full cycle — including a ride-height change and a terrain-mode
+switch — can be deleted for good rather than on suspicion.
 
 **Two known inefficiencies**, neither fixable from a signalset:
 
