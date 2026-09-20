@@ -445,6 +445,18 @@ formulas eventually get worked out.
 (916 requests) — the one hit, and the first non-identification DID ever
 found there.
 
+**The suspension decodes check out.** Replaying every logged sample through
+the formats in this file gives corner pressures of 34-50 psi, a ride height
+offset correctly signed at -91 to +50 mm, and module voltage of 9.12-14.56 V,
+all physically sensible. The exception is `3B4D`, labelled Drive Mode, which
+has returned `0` on all 171 samples ever recorded — either the label or the
+byte offset is wrong.
+
+What the audit could not do is say anything about suspension health. Across
+fourteen months only 36 minutes have all four corner pressures captured
+together, because the `7D3` module receives one or two requests per drive
+despite its `freq` of 10.
+
 **Tire pressures remain unsolved, but they exist.** Module `751` returns no
 data to any request, and nothing found so far resembles four tire pressures.
 The decisive clue is the spare: this truck warns when the *spare* is low, and a
@@ -572,6 +584,38 @@ These also double as a test of the scheduler: `F41F` duplicates standard PID
 `011F`, which the app already polls 1560 times a drive. If `F41F` records and
 `F40C` still does not, the alias mechanism works and something specific to
 those eight commands does not.
+
+### The debug batch
+
+On 2026-09-20 a further 51 commands went in: one for every DID this truck has
+ever answered that nothing here decodes. Each is a raw scalar at the byte
+width the logs show it returning, named `LR4_<DID>_RAW`. The batch costs
+0.235 req/s and puts total demand at 10.99.
+
+Cadence follows what fourteen months of scan logs show each DID doing:
+
+| `freq` | Count | Behaviour in the logs |
+|---|---|---|
+| 60 | 6 | Genuinely vary — `761/197C`, `761/D11C`, `7E0/112C`, `7E0/1139`, `7E0/11C4`, `7E1/101A` |
+| 120 | 9 | Flip between exactly two values |
+| 600 | 36 | Never moved |
+
+**"Never moved" means never moved while parked.** Every sample behind that
+bottom tier came from a stationary truck, and the three suspension entries
+(`3B00`, `3B01`, `3B08`) were read at a single ride height, where they could
+not have varied even if they encode something. That tier is the weakest
+classification here, which is why it is slow rather than absent.
+
+`761/197C` and `761/D11C` were deleted earlier in this same branch as
+undecoded raws taking zero polls. That was true and also misleading: the
+audit then showed they are among the most variable DIDs on the truck —
+`197C` returns 9 distinct values in 14 samples, `D11C` ranges `3A` to `41`,
+which would be a plausible temperature. They were starved, not dead, and
+they are back at `freq` 60.
+
+A DID that moves on a real drive earns a proper decode. One that stays flat
+through a full cycle — including a ride-height change and a terrain-mode
+switch — can be deleted for good rather than on suspicion.
 
 **Two known inefficiencies**, neither fixable from a signalset:
 
