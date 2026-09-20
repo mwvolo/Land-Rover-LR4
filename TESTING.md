@@ -10,9 +10,9 @@ through it as drives happen; check items off with evidence, not on suspicion.
 ## Open in-vehicle tasks
 
 - [ ] **Re-run `22F187` against module `726`.** Every other module rejected it with NRC 31, but `726` returned a malformed reply carrying VIN bytes instead. Terminal sequence: `ATSH 726`, `ATCRA 72E`, `22F187`.
-- [ ] **Confirm which signalset version the Pelican app is actually holding.** Eight commands stopped being polled on 2026-08-30 and engine speed has never been recorded; the app may be running a cached schedule. Force a signalset refresh, then check whether `F40C` starts appearing.
-- [ ] **A drive with a ride-height change.** `3B00`, `3B01`, `3B08` and `2B12` have only ever been sampled at one height, so their "static" classification is meaningless. Raise and lower the suspension during a logged drive.
-- [ ] **A drive with a terrain-mode change.** `3B4D`, labelled Drive Mode, has returned `0` on all 171 samples ever taken. Cycle through terrain response settings to find out whether the label or the byte offset is wrong.
+- [x] **Confirm which signalset version the Pelican app is actually holding.** Done 2026-09-20: the app was holding a stale signalset. A forced refresh brought all 109 commands into the poll cycle — `F40C` answered 172 of 172 requests, and engine speed was recorded for the first time.
+- [x] **A drive with a ride-height change.** Done 2026-09-20: `3B01`, `3B3C`, all four corner pressures, both height sensors and the compressor all moved. Access height did register — in the pressures and height sensors — contrary to what it looked like from the driver's seat.
+- [ ] **A drive with a terrain-mode change.** `3B4D`, labelled Drive Mode, has returned `0` on all 171 samples ever taken. Cycle through terrain response settings to find out whether the label or the byte offset is wrong. Update 2026-09-20: also returned `0` on all 48 samples through every ride-height change on this drive, so it survived a real state change unmoved. Renamed `LR4_3B4D_RAW` — a terrain-response change is now the only thing left that can identify it.
 - [ ] **A rear-differential lock cycle.** `1E88` and `1E89` on module `795` have never moved.
 - [ ] **A cold start.** Needed for the warm-up curves on `113F` and `2104`, and to catch the crank dip on `1153`/`1154`.
 - [ ] **Identify module `792`.** Its whole `2A3x` block is static and nothing is known about it. Try `22F18C` and `22F191` against it the way the other six unmined modules were probed on 2026-09-19.
@@ -149,65 +149,81 @@ moved" so far only means "never moved while parked."
 
 | Module | DID | `freq` | What we think it is | What would count as a result |
 |---|---|---|---|---|
-| `726` | `0202` | 60 | Only DID found on module 726 | Whether it ever leaves 00 |
-| `761` | `197C` | 60 | Unknown, 9 distinct values in 14 samples | Most variable unmined DID; any correlation with a cabin or body state |
-| `761` | `D11C` | 60 | Unknown, 3A-41 (58-65) | Plausible temperature; compare against F446 ambient |
-| `792` | `2A32` | 600 | Undecoded, constant 00062CF0 in 16 samples (all parked) | Drop if still flat after a full drive cycle |
+| `726` | `0202` | 60 | Only DID found on module 726 — still 00 after 12 samples | Whether it ever leaves 00 |
+| `761` | `197C` | 30 | Unknown, 4 distinct values in 4 samples on the 2026-09-20 drive — with `D11C`, the most active unmined DIDs on the truck | Any correlation with a cabin or body state |
+| `761` | `D11C` | 30 | Unknown, 3A-41 (58-65); 4 distinct values in 4 samples on the 2026-09-20 drive — with `197C`, the most active unmined DIDs on the truck | Plausible temperature; compare against F446 ambient |
+| `792` | `2A32` | 600 | Undecoded, ticked by a small amount on the 2026-09-20 drive — consistent with a counter | Confirm counter behavior over a longer drive; rest of the `2A3x` block stayed flat |
 | `792` | `2A33` | 600 | Undecoded, constant 00033E0A in 15 samples (all parked) | Drop if still flat after a full drive cycle |
 | `792` | `2A34` | 600 | Undecoded, constant 000008C0 in 15 samples (all parked) | Drop if still flat after a full drive cycle |
 | `792` | `2A35` | 600 | Undecoded, constant 00051E28 in 11 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A37` | 600 | Undecoded, constant 000069 in 12 samples (all parked) | Drop if still flat after a full drive cycle |
+| `792` | `2A37` | 600 | Undecoded, ticked by a small amount on the 2026-09-20 drive — consistent with a counter | Confirm counter behavior over a longer drive; rest of the `2A3x` block stayed flat |
 | `792` | `2A38` | 600 | Undecoded, constant 00001A in 12 samples (all parked) | Drop if still flat after a full drive cycle |
 | `792` | `2A39` | 600 | Undecoded, constant 000002 in 12 samples (all parked) | Drop if still flat after a full drive cycle |
 | `792` | `2A3A` | 600 | Undecoded, constant 00001F in 14 samples (all parked) | Drop if still flat after a full drive cycle |
 | `792` | `2A3B` | 600 | Undecoded, constant 00000000 in 7 samples (all parked) | Drop if still flat after a full drive cycle |
 | `792` | `2A3C` | 600 | Undecoded, constant 000000 in 7 samples (all parked) | Drop if still flat after a full drive cycle |
-| `795` | `1E88` | 600 | Rear diff, always 0000 | Any movement under lock engagement |
-| `795` | `1E89` | 600 | Rear diff, always 09C4 (2500) | Looks like a constant or a limit; drop if flat after a lock cycle |
-| `7D3` | `3B00` | 600 | Suspension, static at one ride height | Must be sampled across a ride-height change to mean anything |
-| `7D3` | `3B01` | 600 | Suspension, static at one ride height | Must be sampled across a ride-height change to mean anything |
-| `7D3` | `3B08` | 600 | Suspension, static at one ride height | Must be sampled across a ride-height change to mean anything |
-| `7E0` | `1044` | 600 | Undecoded, constant 00 in 2 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `10E0` | 600 | Undecoded, constant 00 in 14 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `112C` | 60 | Unknown, 570-1341, one FFFF | Any correlation with rpm, load or MAF over a drive |
-| `7E0` | `1139` | 60 | Unknown 32-bit, 1142-2784 | Does not track rpm at idle; look for correlation with injector or air mass |
-| `7E0` | `113F` | 30 | Temperature, 77-80 observed | Should follow a warm-up curve; compare against F405 coolant and 03F3 oil |
-| `7E0` | `1151` | 120 | Undecoded, two values seen: 0000, 0001 | Whether a third value appears on a drive |
-| `7E0` | `1152` | 600 | Undecoded, constant 00 in 12 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `1153` | 5 | Charging voltage, 1/256 V | Tracks alternator output; must dip on crank and NOT mirror F442 |
-| `7E0` | `1154` | 5 | Charging voltage setpoint, 1/256 V | Should sit pinned at 0E00 (14.00 V) and step only under load shedding |
-| `7E0` | `1155` | 600 | Undecoded, constant 00 in 12 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `1156` | 120 | Undecoded, two values seen: 05, 52 | Whether a third value appears on a drive |
-| `7E0` | `1158` | 600 | Undecoded, constant 05 in 12 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `1159` | 120 | Undecoded, two values seen: 04, 07 | Whether a third value appears on a drive |
-| `7E0` | `115B` | 120 | Undecoded, two values seen: 04, 05 | Whether a third value appears on a drive |
-| `7E0` | `1160` | 600 | Undecoded, constant 00D9 in 13 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `1164` | 120 | Undecoded, two values seen: AB, AF | Whether a third value appears on a drive |
-| `7E0` | `1187` | 600 | Undecoded, constant 88 in 5 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `11BA` | 600 | Undecoded, constant 012A in 14 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `11BB` | 600 | Undecoded, constant 0000 in 9 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `11BD` | 600 | Undecoded, constant 00EB in 17 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `11BE` | 600 | Undecoded, constant 0000 in 17 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `11C4` | 60 | Unknown enum, seen 00/01/03 | Which driving states produce 03 |
-| `7E0` | `11C5` | 120 | Undecoded, two values seen: 04, 14 | Whether a third value appears on a drive |
-| `7E0` | `11CC` | 600 | Undecoded, constant 00 in 5 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `F408` | 30 | Short term fuel trim bank 2 (PID 08) | Answers at all; then compare against F406 for the bank asymmetry |
-| `7E0` | `F409` | 30 | Long term fuel trim bank 2 (PID 09) | Answers at all; pairs with F407 to measure asymmetry directly |
+| `795` | `1E88` | 600 | Rear diff, always 0000 — still flat on the 2026-09-20 drive | Any movement under lock engagement |
+| `795` | `1E89` | 600 | Rear diff, always 09C4 (2500) — still flat on the 2026-09-20 drive | Looks like a constant or a limit; drop if flat after a lock cycle |
+| `7D3` | `3B00` | 30 | Suspension, still flat through the 2026-09-20 ride-height change (3 samples) | One more look at `freq` 30 before deletion |
+| `7D3` | `3B01` | 10 | Suspension, three values seen on the 2026-09-20 ride-height change (`00000400`, `00000100`, `00000800`) — looks like a ride-height state word | Needs enough samples to map each value to a height |
+| `7D3` | `3B08` | 30 | Suspension, still flat through the 2026-09-20 ride-height change (3 samples) | One more look at `freq` 30 before deletion |
 | `7E0` | `F41F` | 30 | Run time since start (PID 1F) | Records as a signal - this is the alias-mechanism test against standard 011F |
-| `7E1` | `0302` | 120 | Counter, +145 over six months | Monotonic across drives - candidate operating hours |
-| `7E1` | `0303` | 600 | Undecoded, constant F8 in 6 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E1` | `0304` | 600 | Undecoded, constant 02 in 6 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E1` | `0305` | 600 | Undecoded, constant 00 in 6 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E1` | `0805` | 120 | Undecoded, two values seen: 0A, 0B | Whether a third value appears on a drive |
-| `7E1` | `101A` | 60 | Signed value, -14 to +35 | Sign flips with drive/overrun; candidate torque or slip |
 | `7E1` | `1E6A` | 600 | Undecoded, constant 00 in 27 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E1` | `2104` | 30 | Temperature, 56-64 observed | Should track 1E69 gearbox temp with an offset, or diverge as a second sensor |
-| `7E1` | `210F` | 120 | Enum, 01/02 | Changes with gear range or drive mode |
-| `7E1` | `2B1B` | 600 | Undecoded, constant 0000 in 13 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E1` | `2B1C` | 600 | Undecoded, constant 0000 in 13 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E1` | `2B1D` | 600 | Undecoded, constant 0000 in 13 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E1` | `2B1E` | 600 | Undecoded, constant 0000 in 13 samples (all parked) | Drop if still flat after a full drive cycle |
 | `7E1` | `DD01` | 600 | Undecoded, constant 025166 in 1 samples (all parked) | Drop if still flat after a full drive cycle |
+
+---
+
+## Manual-probe-only DIDs
+
+The 2026-09-20 drive's biggest finding: 36 DIDs return `7F 22 31` (request
+out of range) on every normal poll and always have. Across fourteen months
+of logs they have answered only twice — once in December 2025, in a session
+that had sent `10 03` (extended diagnostic session), and once in June 2025,
+in a session with unusual protocol and flow-control setup. Every session
+since that did not open an extended session first has been rejected.
+
+**They are session-gated, not dead.** The app polls in the default session
+and can never reach them. All 36 have been removed from the signalset —
+this is why the command count dropped from 109 to 73 on this drive — and
+they are now readable only by hand.
+
+`7E0`: `1044`, `10E0`, `112C`, `1139`, `113F`, `1151`, `1152`, `1153`,
+`1154`, `1155`, `1156`, `1158`, `1159`, `115B`, `1160`, `1164`, `1187`,
+`11BA`, `11BB`, `11BD`, `11BE`, `11C4`, `11C5`, `11CC`
+
+`7E1`: `0302`, `0303`, `0304`, `0305`, `0805`, `101A`, `2104`, `210F`,
+`2B1B`, `2B1C`, `2B1D`, `2B1E`
+
+The two most interesting: `1153` and `1154`, a charging-voltage pair at
+1/256 V. `1154` sits pinned at exactly `0E00` (14.00 V); both dip to
+5.7-10.1 V on crank.
+
+### Reading them
+
+`10 03` is Diagnostic Session Control, sub-function `03` — extended
+diagnostic session. **This is the one place in this document where a
+command changes ECU state instead of reading it.** Do it deliberately:
+parked, engine running, never while driving — and close the session
+afterward with `10 01` (return to default session).
+
+The extended session times out after a few seconds of silence unless kept
+alive with `3E 00` (tester present). That matters here: probe a long list
+without it and the session drops back to default between questions, and
+every DID on it goes back to answering `7F 22 31`.
+
+```
+ATSH 7E0      set header
+ATCRA 7E8     receive filter
+10 03         open extended diagnostic session
+3E 00         tester present - repeat every few seconds to hold the session
+22 1153       question
+22 1154       question
+...           more questions, with 3E 00 between any pause
+10 01         return to default session
+```
+
+Retarget `ATSH`/`ATCRA` to `7E1`/`7E9` for the second module and open a
+fresh `10 03` there — the extended session is per-module, not global.
 
 ---
 
@@ -233,6 +249,6 @@ decode.
 Open questions that aren't in-vehicle tasks — they need log analysis or a
 decision, not a drive:
 
-- Why eight commands stopped being polled on 2026-08-30, and whether it's tied to the `freq` re-tiering in `f782e4d`/`527a47f`.
-- Whether `F408`/`F409` (bank-2 fuel trims) exist on this engine at all — they have never been requested.
-- What `761/197C` and `761/D11C` measure — the most variable unmined DIDs found so far.
+- Both banks are correcting lean together by 7-9% long term (B1 +9.31%, B2 +7.32%), which points at fuel delivery, MAF calibration or an unmetered air leak rather than a per-bank fault. One drive, single-digit sample counts — needs confirming.
+- What `3B01`'s bit flags mean, and which bit corresponds to which height.
+- What `761/197C` and `761/D11C` measure.

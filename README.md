@@ -99,8 +99,7 @@ VIN bytes instead of a rejection — worth a retry.
 | O2 Lambda B1S1 | `7E0` `22F434` | Measured lambda |
 | O2 Sensor Voltage | `7E0` `22F434` | Second half of the same response |
 | Catalyst Temp B1S1 / B2S1 | `7E0` `22F43C` / `22F43D` | One per bank |
-| Oil Temp | `7E0` `2203F3` | Land Rover's own sensor |
-| Oil Temp (SAE) | `7E0` `22F45C` | Standard PID, same physical sensor |
+| Oil Temp | `7E0` `2203F3` | Land Rover's own sensor. The SAE alias `F45C` was dropped — 1,169 samples against this one's 347,015 |
 | Oil Level | `7E0` `2203E6` | Millimetres in the sump |
 | Oil Volume | `7E0` `2203F2` | |
 
@@ -124,10 +123,11 @@ fuel cut — injectors fully off while coasting, sensor reading pure air.
 | Signal | Address | Notes |
 |---|---|---|
 | Fuel Level | `7E0` `22F42F` | |
-| Fuel Rail Pressure | `7E0` `22033E` | Proprietary; ~60 bar idle, 130+ under load |
-| Fuel Rail Pressure (SAE) | `7E0` `22F423` | Standard PID, same rail |
+| Fuel Rail Pressure | `7E0` `22033E` | Proprietary; ~60 bar idle, 130+ under load. The SAE alias `F423` was dropped — 158 samples against this one's 15,910 |
 | Short Term Fuel Trim B1 | `7E0` `22F406` | Immediate correction, swings constantly |
 | Long Term Fuel Trim B1 | `7E0` `22F407` | Learned correction, drifts slowly |
+| Short Term Fuel Trim B2 | `7E0` `22F408` | First recorded 2026-09-20 |
+| Long Term Fuel Trim B2 | `7E0` `22F409` | First recorded 2026-09-20 |
 
 ---
 
@@ -151,7 +151,7 @@ All four corners report gauge pressure in the air spring.
 | Pressure Rear Left / Right | `7D3` `223B06` / `223B05` |
 | Height Offset | `7D3` `222B12` | Signed, millimetres from nominal |
 | Compressor Activity | `7D3` `223B07` | ~110 at rest, over 1,300 while the truck raises |
-| Ride Height Mode | `7D3` `223B3C` | 1 normal, 2 raised — both confirmed |
+| Ride Height Mode | `7D3` `223B3C` | 1 normal, 2 raised — both confirmed. Two more values, `0D` and `04`, turned up during a ride-height change on 2026-09-20 and aren't explained yet |
 | Height Sensor Front / Rear | `7D3` `223B71` / `223B72` | **Inverted** — falls as the truck rises |
 | Module Voltage | `7D3` `22D11A` | Should mirror battery voltage |
 
@@ -411,11 +411,14 @@ you've either shifted your load or picked up a slow leak.
 | Suspension Balance | Articulation and weight transfer, live |
 | Gear Selector | Confirms what the transmission thinks it's in |
 
-Ride Height, Ride Height Front/Rear and Drive Mode are in the signalset as
-untested probes — the addresses come from a Jaguar EAS that shares this
-module's pressure DIDs, so they have a good chance of working. If Drive Mode
-returns a value, note what it reads in each Terrain Response setting and the
-numbers can be mapped to names.
+A drive on 2026-09-20 that changed ride height confirmed Ride Height, Ride
+Height Front/Rear and the corner pressures all move together and in the
+directions their labels predict — see "Air suspension notes" below. `3B4D`,
+once labelled Drive Mode, is not: it read `0` on all 48 samples that drive,
+straight through every height change. Terrain Response mode itself is still
+untested, since the drive changed height rather than terrain setting — if a
+future drive cycles through Terrain Response settings, watch `3B4D` and note
+what it reads in each one.
 
 ### Before you go
 
@@ -435,7 +438,7 @@ formulas eventually get worked out.
 | Address | Signals |
 |---|---|
 | `792` / `79A` | `2A32`–`2A3A` — eight live values, none resembling tire pressures |
-| `795` / `79D` | `1E89` |
+| `795` / `79D` | `1E88`, `1E89` |
 | `7E1` / `7E9` | `1E68`, `1E6A` — neighbours of the gearbox temp |
 | `761` / `769` | `197C`, `D11C` |
 | `726` / `72E` | `0202` — returns `00` |
@@ -448,9 +451,12 @@ found there.
 **The suspension decodes check out.** Replaying every logged sample through
 the formats in this file gives corner pressures of 34-50 psi, a ride height
 offset correctly signed at -91 to +50 mm, and module voltage of 9.12-14.56 V,
-all physically sensible. The exception is `3B4D`, labelled Drive Mode, which
-has returned `0` on all 171 samples ever recorded — either the label or the
-byte offset is wrong.
+all physically sensible. The exception is `3B4D`: it was labelled Drive Mode,
+but it returned `0` on all 171 samples recorded before 2026-09-20 and on all
+48 samples taken on a 2026-09-20 drive that changed ride height twice — flat
+straight through the one state change it was tested against. The signal has
+been renamed `LR4_3B4D_RAW`. A terrain-mode change hasn't been tested yet, so
+the field is unidentified rather than proven useless.
 
 What the audit could not do is say anything about suspension health. Across
 fourteen months only 36 minutes have all four corner pressures captured
@@ -469,14 +475,39 @@ them finds the module.
 
 ### Air suspension notes
 
+A 33-minute drive on 2026-09-20 that changed ride height twice gave the first
+real test of these fields, and most of them passed it.
+
 `3B71` and `3B72` track the height sensors, and they read **inverted** — the
 number falls as the truck rises. Observed: 115/115 at normal height, 93/101
-raised. Treat a falling value as the truck going up.
+raised; on the 2026-09-20 drive `3B71` fell from `6A` to `56` on the raise,
+then rose to `85` by the end. Treat a falling value as the truck going up.
+
+The four corner pressures (`3B03`-`3B06`) tracked the same drive unambiguously:
+around `00C5` cruising, down to about `00AC`, up to about `00FE` at 16:22:42
+UTC as the truck raised, then down to `0096`-`009F` at 16:23:49 as it lowered.
+Compressor activity (`3B07`) jumped from around `00A0` to `05F0` and `0617`
+during those changes.
+
+The driver believed the low "access" height didn't register. It did — the
+corner pressures and height sensors both recorded a third, lower level at
+16:23:49. The state fields did not obviously distinguish it:
 
 `3B3C` is the height mode and increments upward: mode 1 was normal and mode 2
-was raised, both confirmed. The map also labels 0 as Access and 3 as Extended on
-the assumption the ordering continues — neither has been observed yet, so
-correct them if they read wrong.
+was raised, both confirmed before this drive. The map also labels 0 as Access
+and 3 as Extended on the assumption the ordering continues. On the 2026-09-20
+drive it also returned `0D` and `04`, neither of which fits that scheme, and
+none of the four values it returned cleanly picked out the access-height
+moment. Correct the 0/3 labels if they read wrong.
+
+`3B01` returned three distinct values on the same drive — `00000400`,
+`00000100`, `00000800` — each a single bit set, which looks like a ride-height
+state word rather than an enum. It was at `freq` 600 and caught only 3
+samples that drive, so it's been raised to `freq` 10 for another look.
+
+Most likely, `3B01` and `3B3C` simply weren't sampled often enough (`freq` 600
+and 10) to catch the access-height moment, which is why the corner pressures
+and height sensors saw it and the state fields didn't.
 
 The two balance ratios respond to cargo, not just faults. With the load area
 full, front balance read 0.99 and rear read 0.92 — the rear axle carrying more
@@ -504,118 +535,122 @@ The budget in this file:
 |---|---|---|
 | 1s | 4 | Manifold pressure, barometric, engine speed, vehicle speed |
 | 3s | 8 | Throttle, pedals, timing, lambda, load |
-| 5s | 12 | Temperatures, fuel trims, mass air flow |
-| 10s | 16 | Air suspension |
-| 30s | 8 | Fuel level, battery, catalyst temperatures |
-| 120s | 14 | Undecoded probes |
-| 600s | 3 | Odometer, oil level, oil volume |
+| 5s | 10 | Temperatures, fuel trims bank 1, mass air flow, gearbox and diff temp, gear selector |
+| 10s | 12 | Air suspension |
+| 30s | 19 | Fuel trims bank 2, catalyst temperatures, battery, fuel level, and the undecoded probes shown to move |
+| 60s | 1 | `726/0202` |
+| 600s | 19 | Odometer, oil level, oil volume, and undecoded probes that have never moved |
 
-That totals about 11 requests per second of demand against roughly 11 available
-once protocol overhead is removed. The four one-second commands exist so the
-boost calculation stays responsive.
+That totals 10.55 requests per second of demand against roughly 11 available
+once protocol overhead is removed — 73 commands, down from 109 after the
+extended-session-only block described below was removed. The four
+one-second commands exist so the boost calculation stays responsive.
 
-### Eight commands stopped being polled on 2026-08-30
+### Eight commands went quiet for three weeks. The app had a stale signalset
 
-A scan-log audit through 2026-09-19 found that eight commands in this file
-are never requested on a drive, and have not been since 2026-08-30:
+Between 2026-08-30 and 2026-09-19, eight commands in this file were never
+requested on a drive: `F40C`, `F411`, `F40E`, `F443`, `F449`, `F44A`, `F407`
+and `033E`. The cost was real — `engineSpeed` is wired to `F40C`, and no
+engine speed value reached the signal database in fourteen months. Two
+synthetics could not compute either, `LR4_THROTTLE_TRACKING` needing `F411`
+and `LR4_PEDAL_AGREEMENT` needing `F449` and `F44A`.
 
-| Command | Signal | Last normal day |
+**Resolved on 2026-09-20.** Every command in the file was polled that drive.
+`F40C` was requested 172 times and answered 172 times, and engine speed is
+now recorded. Nothing in this file changed to cause that — the app had
+simply been running an older copy of the signalset, and picked up the
+current one.
+
+Getting there meant ruling out the two obvious causes, and both remain worth
+knowing. It was not the request budget: demand was 10.21 req/s against the
+11-13 the adapter delivers. It was not the `freq` values either, because the
+dead commands shared tiers with live ones — `F40C` and `F40D` are both
+`freq` 1 and only `F40D` ran; `F411`, `F443`, `F449` and `F44A` sat at
+`freq` 3 alongside `F404`, `F434` and `F444`, which all ran.
+
+The lesson that outlives the incident: **a command's presence in this file
+means nothing until the app has actually fetched the file.** Before
+concluding that a command is unsupported, confirm the app is holding the
+version you think it is.
+
+### The seven probes, and how they turned out
+
+Seven commands were added on 2026-09-20 to be watched rather than trusted.
+The 2026-09-20 drive settled all of them.
+
+**`7E0/F408` and `7E0/F409` answered — the bank-2 fuel trims exist.** They
+had never been requested on this vehicle before. They are now real signals
+rather than probes, and what they show matters: see below.
+
+**`7E0/1153`, `7E0/1154`, `7E0/113F` and `7E1/2104` returned `7F 22 31`.**
+They are session-gated, not dead — see the manual-probe list in
+`TESTING.md`. The charging-voltage reading behind `1153`/`1154` still
+stands (`1154` pinned at exactly `0E00`, 14.00 V, with both dipping to
+5.7-10.1 V on crank, tracking nothing that `F442` does), but it can only be
+read by hand in an extended diagnostic session, so those commands have been
+removed from this file.
+
+**`726/0202` answered and stayed at `00`** across twelve samples.
+
+`F41F` also recorded, which was the incidental test of whether the `F4xx`
+alias mechanism works at all against a standard PID the app already polls.
+It does.
+
+### Both banks are running lean, and they agree with each other
+
+First bank-2 data from this truck, measured over the 2026-09-20 drive:
+
+| | Bank 1 | Bank 2 |
 |---|---|---|
-| `7E0/F40C` | Engine Speed | 2026-08-29, 1155 polls |
-| `7E0/F411` | Throttle Position | 2026-09-04 |
-| `7E0/F40E` | Timing Advance | 2026-08-30 |
-| `7E0/F443` | Absolute Load | 2026-08-30 |
-| `7E0/F449` | Accelerator Pedal D | 2026-08-30 |
-| `7E0/F44A` | Accelerator Pedal E | 2026-08-30 |
-| `7E0/F407` | Long Term Fuel Trim B1 | 2026-09-01 |
-| `7E0/033E` | Fuel Rail Pressure | 2026-09-01 |
+| Short term | -0.55% (n=305) | -5.36% (n=7) |
+| Long term | **+9.31%** (n=13) | **+7.32%** (n=8) |
 
-**No engine speed value has ever reached the signal database**, across
-fourteen months. The `engineSpeed` metric slot is wired to `F40C` and has
-never been filled. The data is on the wire — the app polls standard PID
-`010C` 2511 times in a 39-minute drive — but Pelican consumes standard PIDs
-internally and they never surface as signals, which is the whole reason this
-file uses `F4xx` aliases. The alias is the part that isn't running.
+Two points apart on the long-term trims is not an asymmetry. Both banks are
+correcting lean together by 7-9%, which points at something shared — fuel
+delivery, MAF calibration, or unmetered air upstream of where the intake
+splits — rather than a fault on one side. Any earlier reading of this as a
+bank asymmetry came from having only bank 1 to look at.
 
-Two synthetics consequently never compute: `LR4_THROTTLE_TRACKING` needs
-`F411`, and `LR4_PEDAL_AGREEMENT` needs `F449` and `F44A`.
+Sample sizes are small: one drive, and single digits on three of the four
+figures. Treat the direction as real and the magnitude as provisional.
 
-Two candidate causes are ruled out. It is not the request budget: total
-demand is 10.21 req/s against the 11-13 the adapter delivers. It is not the
-`freq` values either, because dead commands share tiers with live ones —
-`F40C` and `F40D` are both `freq` 1, and only `F40D` runs; `F411`, `F443`,
-`F449` and `F44A` sit at `freq` 3 alongside `F404`, `F434` and `F444`, which
-all run.
+### The debug batch, and what the first drive did to it
 
-What remains is the app's own scheduling, and the date points at this repo:
-2026-08-30 is when `f782e4d` and `527a47f` re-tiered every `freq` in the
-file, `f782e4d` briefly introducing fractional values such as `0.5` before
-`527a47f` rounded them back to integers. Whether the app cached a schedule
-built from that intermediate state is untested. Before changing anything
-here, confirm which version of this signalset the app actually holds.
+On 2026-09-20, 51 commands went in — one for every DID this truck had ever
+answered that nothing here decodes — each a raw scalar at its observed byte
+width, named `LR4_<DID>_RAW`. The first real drive cut that back hard.
 
-### Probes added to test that conclusion
+**Thirty-six of them are session-gated.** The whole `7E0` `10xx`/`11xx`
+family and the `7E1` `0302`-`0305`, `0805`, `101A`, `2104`, `210F`,
+`2B1B`-`2B1E` block returned `7F 22 31`. In fourteen months of logs they
+have answered in exactly two sessions: one in December 2025 that sent
+`10 03` to open an extended diagnostic session, and one in June 2025 doing
+unusual protocol and flow-control setup. Every session since that did not
+open an extended session has been rejected.
 
-Seven commands were added on 2026-09-20 specifically to be watched rather
-than trusted. Total demand rises to 10.76 req/s, still inside the budget.
+The app polls in the default session, so it can never reach them. All 36
+are out of this file and listed in `TESTING.md` as manual-probe-only. This
+also rewrites the history: `1cf20db` dropped many of them as "dead probes",
+and they were never dead — they were session-gated, and nobody had noticed
+the December session opened `10 03` first.
 
-`7E0/1153` and `7E0/1154` are a charging-voltage pair at 1/256 V. `1154`
-rests at exactly `0E00`, 14.00 V, which reads as a regulator setpoint rather
-than a measurement; `1153` floats 13.94-14.12 V around it and both drop to
-5.7-10.1 V on crank. They do not track `F442`, which drifted 13.0-14.5 V
-across the same session, so this is a different node and at better
-resolution. Both were dropped as dead probes in `1cf20db`; the logs
-contradict that, and every sample behind the original call was taken parked.
+What survived, and how it was re-tiered after the drive:
 
-`7E0/F408` and `7E0/F409` are the bank-2 fuel trims. They have never been
-requested on this vehicle. If they answer, the bank asymmetry becomes
-directly measurable instead of inferred, which matters more now that `F407`
-has been silent since 2026-09-01.
-
-`7E0/113F` and `7E1/2104` are undecoded single bytes that move: `113F` drifts
-77-80 and `2104` climbs 56-64 while parked and running. Both are recorded as
-raw scalars because a plain degrees-Celsius reading and a reading with the
-usual -40 offset are both physically plausible, and parked data cannot
-separate them.
-
-`726/0202` is the one hit from the `0000`-`03FF` sweep of that module.
-
-These also double as a test of the scheduler: `F41F` duplicates standard PID
-`011F`, which the app already polls 1560 times a drive. If `F41F` records and
-`F40C` still does not, the alias mechanism works and something specific to
-those eight commands does not.
-
-### The debug batch
-
-On 2026-09-20 a further 51 commands went in: one for every DID this truck has
-ever answered that nothing here decodes. Each is a raw scalar at the byte
-width the logs show it returning, named `LR4_<DID>_RAW`. The batch costs
-0.235 req/s and puts total demand at 10.99.
-
-Cadence follows what fourteen months of scan logs show each DID doing:
-
-| `freq` | Count | Behaviour in the logs |
+| Command | Change | Why |
 |---|---|---|
-| 60 | 6 | Genuinely vary — `761/197C`, `761/D11C`, `7E0/112C`, `7E0/1139`, `7E0/11C4`, `7E1/101A` |
-| 120 | 9 | Flip between exactly two values |
-| 600 | 36 | Never moved |
+| `7D3/3B01` | `freq` 600 → 10 | Returned three single-bit values; looks like the ride-height state word |
+| `7D3/3B00`, `7D3/3B08` | `freq` 600 → 30 | Still flat through a real height change, but on 3 samples each — one more look before deletion |
+| `761/197C`, `761/D11C` | `freq` 60 → 30 | Four distinct values in four samples each; the most active unmined DIDs on the truck |
+| `792/2A32`, `792/2A37` | unchanged | Each ticked by a small amount, consistent with counters. The rest of the `2A3x` block stayed flat |
+| `726/0202`, `795/1E88`, `795/1E89` | unchanged | Still flat; the diff-lock cycle is what will decide the `795` pair |
 
-**"Never moved" means never moved while parked.** Every sample behind that
-bottom tier came from a stationary truck, and the three suspension entries
-(`3B00`, `3B01`, `3B08`) were read at a single ride height, where they could
-not have varied even if they encode something. That tier is the weakest
-classification here, which is why it is slow rather than absent.
-
-`761/197C` and `761/D11C` were deleted earlier in this same branch as
-undecoded raws taking zero polls. That was true and also misleading: the
-audit then showed they are among the most variable DIDs on the truck —
-`197C` returns 9 distinct values in 14 samples, `D11C` ranges `3A` to `41`,
-which would be a plausible temperature. They were starved, not dead, and
-they are back at `freq` 60.
+The file is now 73 commands at 10.55 req/s.
 
 A DID that moves on a real drive earns a proper decode. One that stays flat
 through a full cycle — including a ride-height change and a terrain-mode
-switch — can be deleted for good rather than on suspicion.
+switch — can be deleted for good rather than on suspicion. Do not read a
+`7F 22 31` as "unsupported" without checking whether an extended session
+would have changed the answer.
 
 **Two known inefficiencies**, neither fixable from a signalset:
 
