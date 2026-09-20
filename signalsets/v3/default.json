@@ -234,9 +234,10 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F470"}, "freq": 15,
   "signals": [
-    {"id": "LR4_F470_B1", "path": "Engine", "fmt": { "bix": 8, "len": 16, "max": 65535, "unit": "scalar" }, "name": "F470 Word 1"},
-    {"id": "LR4_F470_B2", "path": "Engine", "fmt": { "bix": 24, "len": 16, "max": 65535, "unit": "scalar" }, "name": "F470 Word 2"},
-    {"id": "LR4_F470_B3", "path": "Engine", "fmt": { "bix": 40, "len": 16, "max": 65535, "unit": "scalar" }, "name": "F470 Word 3"}
+    {"id": "LR4_BOOST_CMD_A", "path": "Engine", "fmt": { "bix": 8, "len": 16, "max": 2047.96875, "div": 32, "unit": "kilopascal" }, "name": "Commanded Boost Pressure A"},
+    {"id": "LR4_BOOST_A", "path": "Engine", "fmt": { "bix": 24, "len": 16, "max": 2047.96875, "div": 32, "unit": "kilopascal" }, "name": "Boost Pressure Sensor A"},
+    {"id": "LR4_BOOST_CMD_B", "path": "Engine", "fmt": { "bix": 40, "len": 16, "max": 2047.96875, "div": 32, "unit": "kilopascal" }, "name": "Commanded Boost Pressure B"},
+    {"id": "LR4_BOOST_B", "path": "Engine", "fmt": { "bix": 56, "len": 16, "max": 2047.96875, "div": 32, "unit": "kilopascal" }, "name": "Boost Pressure Sensor B"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F404"}, "freq": 3,
   "signals": [
