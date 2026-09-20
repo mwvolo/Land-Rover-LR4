@@ -24,6 +24,33 @@ not on suspicion.
 
 ---
 
+## Tire pressures: what the Jaguar signalset suggests
+
+Jaguar reads all four tire pressures and temperatures, and fills eight Pelican
+metric slots this truck leaves empty. It does it on header `751`, response
+`759`, with DIDs `2076`-`2079` for pressure at 1/0.01373 bar and `2A0A`-`2A0D`
+for temperature at -50 °C offset.
+
+On this truck `751` is silent. It has been asked `2076`-`2079` 1,386 times
+each and answers `NO DATA` every time, and it does not answer `0100` or
+`0902` either, so nothing is listening at that address.
+
+But the temperature DIDs have never been tried anywhere useful. `2A0A`-`2A0D`
+have only ever gone to header `710` and to `FC00F1`, both of which are silent.
+They have never been sent to a module that actually answers.
+
+- [ ] **Sweep `2A0A`-`2A0D` across every module that responds** — `716`,
+  `726`, `732`, `734`, `737`, `760`, `761`, `792`, `795`, `797`, `7D3`. About
+  45 requests, parked, a couple of minutes. `2076` has already been tried on
+  `716`, `726`, `734`, `737`, `760` and `797` and drew `7F 22 31` from the
+  live ones, meaning those modules are there but do not carry that DID.
+- [ ] **Try `2076`-`2079` on `761` and `7D3`**, the two answering modules that
+  were skipped in the earlier round.
+
+The spare tire warning proves the sensors exist. Something is receiving them.
+
+---
+
 ## Terminal cheat sheet
 
 The adapter terminal puts you on the CAN bus as a diagnostic tester. Everything

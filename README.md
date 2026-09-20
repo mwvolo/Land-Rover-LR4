@@ -688,7 +688,7 @@ tested the same day. **All sixteen answered.** Ten earn their place.
 | `22F438` | Bank 2 lambda 0.853-1.985 over 29 valid samples; railed at `FFFF` on 23 of 52 |
 | `22F415` | Post-catalyst O2, 0.13-0.93 V and switching |
 | `22F445` / `22F447` | Relative throttle 2.7-22.7%, absolute throttle B 12.5-22.4% |
-| `22F470` | Ten data bytes, undecoded |
+| `22F470` | **Boost pressure.** Decoded against SAE J1979 PID 70: sensor A reads 24.72 kPa at idle |
 
 **The dual mass airflow sensors are the find.** MAF calibration was one of
 three candidate explanations for both banks correcting lean together, and
@@ -717,6 +717,21 @@ present. That can never change, so it is recorded here instead of polled.
 
 Two still need samples: `F456` (three samples, all near zero) and `F458`
 (one sample, `7F`, meaning unknown).
+
+`F470` was the one command still leaving something on the table. Read
+against the SAE J1979 definition of PID 70 its ten bytes are commanded boost
+and measured boost for two channels, at 1/32 kPa. The support byte is `0x02`,
+which flags channel A as present, and channel A reads 24.72 kPa at idle.
+**This is the first direct boost measurement on this truck** — everything
+before it was inferred from manifold pressure over barometric. It costs no
+extra requests; the reply was already arriving and being thrown away.
+
+Checking the rest of the signalset the same way found nothing else. Against
+the canonical SAE signalset, the only other unread fields in replies we
+already make are sensor-present bits and channels this engine does not have:
+`F468` carries six intake air temperature slots and answers `FF` on four,
+`F466` and `F467` expose support bits for sensors we already read, and
+`F408`/`F409` reserve a second byte for bank 4, which a V6 does not have.
 
 Barometric pressure moved from `freq` 1 to `freq` 5 to pay for this. It does
 not change at 1 Hz, and it was consuming 0.9 req/s of a budget with no slack.
