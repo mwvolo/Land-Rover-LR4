@@ -2,8 +2,10 @@
 
 The README records what's known about this signalset. This file records what
 isn't — the open questions that can only be answered in the truck, and the
-pass/fail criteria for the 51 debug parameters added on 2026-09-20. Work
-through it as drives happen; check items off with evidence, not on suspicion.
+pass/fail criteria for the debug parameters added on 2026-09-20 (51 in the
+first batch, 8 more added later that day from the ECM's own supported-PID
+bitmask). Work through it as drives happen; check items off with evidence,
+not on suspicion.
 
 ---
 
@@ -17,6 +19,8 @@ through it as drives happen; check items off with evidence, not on suspicion.
 - [ ] **A cold start.** Needed for the warm-up curves on `113F` and `2104`, and to catch the crank dip on `1153`/`1154`.
 - [ ] **Identify module `792`.** Its whole `2A3x` block is static and nothing is known about it. Try `22F18C` and `22F191` against it the way the other six unmined modules were probed on 2026-09-19.
 - [ ] **Mine the four still-unidentified modules** — `716`, `726`, `737`, `797`. Each returned a distinct ECU serial via `22F18C` but rejected `22F191`, so they are real and separate but their function is unknown.
+- [ ] **Sweep module `760` for wheel speeds.** `760` was identified as the ABS/brake module on 2026-09-19 and has never been mined. Individual wheel speeds would enable dragging-brake detection, a tire-size mismatch check, and a better speed reference than the single `F40D` value. A parked terminal sweep — no drive needed.
+- [ ] **Read fault codes.** This file has no DTC coverage at all — modes `03` (stored), `07` (pending), `0A` (permanent), plus UDS service `19` for the non-OBD modules. Pending codes are the earliest warning available on a vehicle this age and have never been looked at. This probably can't be expressed in an OBDb signalset, so it stays a terminal task rather than something to add to `default.json`.
 
 ---
 
@@ -170,6 +174,14 @@ moved" so far only means "never moved while parked."
 | `7E0` | `F41F` | 30 | Run time since start (PID 1F) | Records as a signal - this is the alias-mechanism test against standard 011F |
 | `7E1` | `1E6A` | 600 | Undecoded, constant 00 in 27 samples (all parked) | Drop if still flat after a full drive cycle |
 | `7E1` | `DD01` | 600 | Undecoded, constant 025166 in 1 samples (all parked) | Drop if still flat after a full drive cycle |
+| `7E0` | `F416` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+| `7E0` | `F419` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+| `7E0` | `F41A` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+| `7E0` | `F458` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+| `7E0` | `F466` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+| `7E0` | `F467` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+| `7E0` | `F468` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+| `7E0` | `F470` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 
 ---
 
