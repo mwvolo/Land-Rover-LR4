@@ -102,6 +102,12 @@ VIN bytes instead of a rejection — worth a retry.
 | Oil Temp | `7E0` `2203F3` | Land Rover's own sensor. The SAE alias `F45C` was dropped — 1,169 samples against this one's 347,015 |
 | Oil Level | `7E0` `2203E6` | Millimetres in the sump |
 | Oil Volume | `7E0` `2203F2` | |
+| O2 Lambda B2S1 | `7E0` `22F438` | Measured lambda, bank 2 — first bank 2 lambda ever read on this truck |
+| O2 Sensor Voltage B2S1 | `7E0` `22F438` | Second half of the same response |
+| O2 Voltage B1S2 | `7E0` `22F415` | Post-catalyst sensor, bank 1 |
+| Relative Throttle Position | `7E0` `22F445` | A third throttle-position reading, alongside Throttle Position and Commanded Throttle |
+| Absolute Throttle Position B | `7E0` `22F447` | A fourth |
+| O2 Sensors Present | `7E0` `22F413` | Bitmask of which O2 sensor positions are physically fitted |
 
 ### Lambda
 
@@ -128,6 +134,11 @@ fuel cut — injectors fully off while coasting, sensor reading pure air.
 | Long Term Fuel Trim B1 | `7E0` `22F407` | Learned correction, drifts slowly |
 | Short Term Fuel Trim B2 | `7E0` `22F408` | First recorded 2026-09-20 |
 | Long Term Fuel Trim B2 | `7E0` `22F409` | First recorded 2026-09-20 |
+| Fuel System Status B1 | `7E0` `22F403` | Enum: open loop cold / closed loop / open loop, load or decel fuel cut / open loop, system fault / closed loop with a feedback fault |
+| Fuel System Status B2 | `7E0` `22F403` | Second half of the same response; not yet mapped to named states |
+| Commanded Evap Purge | `7E0` `22F42E` | Percent duty cycle on the purge valve |
+| O2 Trim B1S2 | `7E0` `22F415` | Second half of the same response — post-catalyst trim, bank 1 |
+| Long Term Secondary O2 Trim B1 | `7E0` `22F456` | |
 
 ---
 
@@ -437,6 +448,7 @@ formulas eventually get worked out.
 
 | Address | Signals |
 |---|---|
+| `7E0` / `7E8` | `F416`, `F419`, `F41A`, `F458`, `F466`, `F467`, `F468`, `F470` — eight single-byte probes added 2026-09-20. The ECM's own supported-PID bitmask says these PIDs exist; nothing more is known |
 | `792` / `79A` | `2A32`–`2A3A` — eight live values, none resembling tire pressures |
 | `795` / `79D` | `1E88`, `1E89` |
 | `7E1` / `7E9` | `1E68`, `1E6A` — neighbours of the gearbox temp |
@@ -536,14 +548,16 @@ The budget in this file:
 | 1s | 4 | Manifold pressure, barometric, engine speed, vehicle speed |
 | 3s | 8 | Throttle, pedals, timing, lambda, load |
 | 5s | 10 | Temperatures, fuel trims bank 1, mass air flow, gearbox and diff temp, gear selector |
-| 10s | 12 | Air suspension |
+| 10s | 14 | Air suspension, fuel system status B1/B2, O2 lambda/voltage B2S1 |
+| 20s | 2 | Commanded evap purge, O2 voltage/trim B1S2 |
 | 30s | 19 | Fuel trims bank 2, catalyst temperatures, battery, fuel level, and the undecoded probes shown to move |
-| 60s | 1 | `726/0202` |
-| 600s | 19 | Odometer, oil level, oil volume, and undecoded probes that have never moved |
+| 60s | 4 | `726/0202`, long term secondary O2 trim B1, relative throttle position, absolute throttle position B |
+| 300s | 8 | Eight raw single-byte probes from the ECM's own supported-PID bitmask, payload width unknown |
+| 600s | 20 | Odometer, oil level, oil volume, O2 sensors present, and undecoded probes that have never moved |
 
-That totals 10.55 requests per second of demand against roughly 11 available
-once protocol overhead is removed — 73 commands, down from 109 after the
-extended-session-only block described below was removed. The four
+That totals 10.93 requests per second of demand against roughly 11 available
+once protocol overhead is removed — 89 commands, up from 73 after the
+sixteen added from the ECM's own supported-PID bitmask (see below). The four
 one-second commands exist so the boost calculation stays responsive.
 
 ### Eight commands went quiet for three weeks. The app had a stale signalset
@@ -614,6 +628,11 @@ bank asymmetry came from having only bank 1 to look at.
 Sample sizes are small: one drive, and single digits on three of the four
 figures. Treat the direction as real and the magnitude as provisional.
 
+`F403`, `F42E` and `F438`, added to the file below, exist specifically to
+test this: whether the engine was in closed loop when the trims were
+measured, whether a stuck-open purge valve is pulling in unmetered air, and
+what bank 2's own oxygen sensor is doing behind its trim.
+
 ### The debug batch, and what the first drive did to it
 
 On 2026-09-20, 51 commands went in — one for every DID this truck had ever
@@ -651,6 +670,46 @@ through a full cycle — including a ride-height change and a terrain-mode
 switch — can be deleted for good rather than on suspicion. Do not read a
 `7F 22 31` as "unsupported" without checking whether an extended session
 would have changed the answer.
+
+### Sixteen more, found by reading the ECM's own PID list
+
+Every request in this file so far came from watching the bus and guessing.
+On 2026-09-20 the ECM's own mode-01 replies to `0100`, `0120`, `0140` and
+`0160` were decoded instead — these are bitmasks of which mode-01 PIDs the
+module actually supports, and this ECM claims 54 of them. Cross-referencing
+those 54 against this file found 25 with no entry. After excluding metadata
+PIDs (the support bitmasks themselves, monitor status, OBD standard, fuel
+type) and the two SAE aliases already dropped as duplicates (`F423`, `F45C`
+— see Fuel and Engine above), sixteen were worth adding.
+
+Eight got real decodes:
+
+| Command | PID | Signal | Why it was worth adding |
+|---|---|---|---|
+| `F403` | `03` | Fuel System Status B1 / B2 | Open loop vs. closed loop — fuel trims only mean something in closed loop |
+| `F438` | `38` | O2 Lambda B2S1 / O2 Voltage B2S1 | Bank 1 lambda has been read via `F434` all along; there was no bank 2 equivalent |
+| `F42E` | `2E` | Commanded Evap Purge | A stuck-open purge valve is a classic cause of both banks running lean at once |
+| `F415` | `15` | O2 Voltage B1S2 / O2 Trim B1S2 | Post-catalyst sensor, bank 1 |
+| `F456` | `56` | Long Term Secondary O2 Trim B1 | Further trim context |
+| `F445` | `45` | Relative Throttle Position | Throttle redundancy |
+| `F447` | `47` | Absolute Throttle Position B | Throttle redundancy |
+| `F413` | `13` | O2 Sensors Present | Bitmask of which O2 sensor positions are physically fitted |
+
+The other eight are raw single-byte probes, because their meaning isn't
+established: `F416`, `F419`, `F41A`, `F458`, `F466`, `F467`, `F468`, `F470`.
+All that's known is that the ECM claims to support the underlying PIDs.
+They're declared at `len` 8 because the payload width is unknown — reading
+the first byte is always safe, and each should be widened once a real reply
+shows its actual width. See `TESTING.md` for what would count as a result
+for each.
+
+This batch was picked to test the lean-trim finding above rather than at
+random: `F403` says whether the engine was in closed loop when the +9%/+7%
+trims were measured, `F42E` tests the stuck-purge-valve hypothesis directly,
+and `F438` gives bank 2's own oxygen sensor behind the bank 2 trim. Together
+they move that finding from an observation toward something diagnosable.
+
+The file is now 89 commands at 10.93 req/s.
 
 **Two known inefficiencies**, neither fixable from a signalset:
 
