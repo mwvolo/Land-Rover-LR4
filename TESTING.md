@@ -20,6 +20,124 @@ through it as drives happen; check items off with evidence, not on suspicion.
 
 ---
 
+## Terminal cheat sheet
+
+The adapter terminal puts you on the CAN bus as a diagnostic tester. Everything
+you type is either **a setting that decides who you are talking to and who you
+are listening to**, or **a question you ask**. AT commands are settings, handled
+by the adapter itself and never sent to the car. Anything else is a question,
+put on the bus verbatim.
+
+### The pattern you keep repeating
+
+```
+ATSH 726      set header      - address requests to this module
+ATCRA 72E     receive filter  - show only this module's replies
+22F187        question
+22F18C        question
+22F191        question
+```
+
+`ATSH hhh` is "Set Header": the 11-bit CAN ID your requests go out with, which
+is the module's request address. `ATCRA hhh` is "set CAN Receive Address" — a
+filter on what comes back. On this truck every reply address is the request
+address plus 8, so `726` is answered by `72E`, `7E0` by `7E8`, `7D3` by `7DB`.
+
+You need both because they do different jobs. Without `ATCRA` you see every
+module that felt like answering, and the adapter sits waiting for more replies
+before it gives you the prompt back — slow and noisy. With it, the adapter
+returns the moment your module answers.
+
+The block repeats because **each pair retargets the conversation**. Ask the same
+three questions of `726`, then re-point at `716` and ask again, and so on. The
+questions stay the same; only the two settings change.
+
+### The command at the end
+
+`ATAR` is "Automatic Receive" — it undoes `ATCRA` and lets the adapter choose
+the receive address again. **Always finish with it.** Leave a filter set and the
+next thing you try is still listening to the last module you probed, so a
+perfectly healthy request looks dead. `ATCRA` with no argument resets the
+filters the same way.
+
+### Asking a question
+
+| You type | Meaning |
+|---|---|
+| `22 xxxx` | UDS ReadDataByIdentifier — service `22`, then a four-digit DID. This is the one to hunt with. It is read-only. |
+| `01 xx` | Legacy OBD-II mode 1 PID. Mostly useless here — the app consumes these internally and they never become recorded signals. |
+| `09 02` | VIN. |
+| `22F18C` / `22F191` / `22F187` | ECU serial / part number / spare part number. Ask these first of any new module: cheap, and often enough to identify what it is. |
+
+Stay on service `22`. Services like `10 03` (extended session), `2F` (I/O
+control) and `31` (routine control) change ECU state rather than read it.
+
+### Reading the reply
+
+A positive answer. This is a real frame from the logs, the reply to `22F405`,
+which arrives as `7E80462F40582` with spaces suppressed:
+
+| Part | Meaning |
+|---|---|
+| `7E8` | who answered |
+| `04` | how many bytes follow |
+| `62` | `0x22 + 0x40` — "yes, ReadDataByIdentifier" |
+| `F405` | echo of the DID you asked for |
+| `82` | the payload, `0x82` = 130, so 130 − 40 = 90 °C coolant |
+
+A rejection — `7E8 03 7F 22 31`: `7F` means refused, `22` is the service you
+asked for, `31` is the reason — request out of range, i.e. this module has no
+such DID. **This is the normal answer when hunting** and not a problem.
+
+`NO DATA` means nothing replied before the timeout: either the module is not
+there or the header is wrong.
+
+Long answers arrive split. Module `726` answering `22F18C` gives
+`72E101362F18C353232`, then `72E2134323933383038`, then `72E2200000000000000`.
+After the address, `10` marks the first frame and `13` is the total byte count
+(19); `21` and `22` are continuation frames counting up. Drop the leading byte
+of each continuation and join the rest — here that spells the ECU serial
+`5224293808`.
+
+### Watching instead of asking
+
+`ATMA` is "Monitor All" — it sends nothing and dumps every frame on the bus.
+Good for finding data that modules broadcast without being asked. Reset the
+filter with `ATCRA` first or you will only see one ID. Any key stops it.
+
+### The setup line the app sends
+
+You do not normally type these, but they explain the noise at the top of a log.
+
+| Command | Meaning |
+|---|---|
+| `ATWS` | warm start — reset the adapter without unplugging it |
+| `ATE0` | echo off |
+| `ATH1` | headers on — **essential**, without it you cannot tell which module replied |
+| `ATS0` | drop spaces from the output |
+| `ATSP6` | protocol 6: ISO 15765-4 CAN, 11-bit, 500 kbaud |
+| `ATAT1` | adaptive timing |
+| `ATM0` | memory off |
+| `ATFCSM0` | flow control fully automatic |
+| `ATDPN` | which protocol is in use — answers `6` here |
+| `ATRV` | battery voltage at the socket |
+
+### Hunting recipe
+
+1. Point at the module: `ATSH <hdr>`, `ATCRA <hdr+8>`.
+2. Ask `22F18C`, `22F191`, `22F187` first. A serial proves the module exists; a
+   part number often names it.
+3. Sweep DIDs. Remember the per-ECU offsets — engine proprietary DIDs sit
+   +0x300 from base, transmission and rear differential +0x1000 — so an "out of
+   range" is often the right DID at the wrong offset.
+4. Note the payload width of anything that answers `62`.
+5. `ATAR` when you move on.
+6. Ask the same DID again under different conditions. A value that never moves
+   tells you nothing, and most of this signalset's unknowns are unknown
+   precisely because they were only ever read from a parked truck.
+
+---
+
 ## Debug parameter criteria
 
 A DID that moves on a real drive earns a proper decode and a real name. One
