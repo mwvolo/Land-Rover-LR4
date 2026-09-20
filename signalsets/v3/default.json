@@ -58,11 +58,11 @@
   "signals": [
     {"id": "LR4_2A3C_RAW", "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3C Raw"}
   ]},
-{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E88"}, "freq": 600,
+{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E88"}, "freq": 30,
   "signals": [
     {"id": "LR4_1E88_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E88 Raw"}
   ]},
-{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E89"}, "freq": 600,
+{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E89"}, "freq": 30,
   "signals": [
     {"id": "LR4_1E89_RAW", "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E89 Raw"}
   ]},
@@ -193,14 +193,13 @@
     {"id": "LR4_O2_LAMBDA_B2", "path": "Engine", "fmt": { "len": 16, "max": 1.999, "div": 32768, "unit": "scalar" }, "name": "O2 Lambda B2S1"},
     {"id": "LR4_O2_VOLTAGE_B2", "path": "Engine", "fmt": { "bix": 16, "len": 16, "max": 7.999, "div": 8192, "unit": "volts" }, "name": "O2 Voltage B2S1"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F42E"}, "freq": 20,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F42E"}, "freq": 10,
   "signals": [
     {"id": "LR4_EVAP_PURGE", "path": "Fuel", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Commanded Evap Purge"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F415"}, "freq": 20,
   "signals": [
-    {"id": "LR4_O2_S2_VOLTAGE", "path": "Engine", "fmt": { "len": 8, "max": 1.275, "div": 200, "unit": "volts" }, "name": "O2 Voltage B1S2"},
-    {"id": "LR4_O2_S2_TRIM", "path": "Fuel", "fmt": { "bix": 8, "len": 8, "max": 99.2, "min": -100, "mul": 100, "div": 128, "add": -100, "unit": "percent" }, "name": "O2 Trim B1S2"}
+    {"id": "LR4_O2_S2_VOLTAGE", "path": "Engine", "fmt": { "len": 8, "max": 1.275, "div": 200, "unit": "volts" }, "name": "O2 Voltage B1S2"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F456"}, "freq": 60,
   "signals": [
@@ -214,41 +213,30 @@
   "signals": [
     {"id": "LR4_THROTTLE_B", "path": "Engine", "fmt": { "len": 8, "max": 100, "mul": 100, "div": 255, "unit": "percent" }, "name": "Absolute Throttle Position B"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F413"}, "freq": 600,
-  "signals": [
-    {"id": "LR4_O2_PRESENT", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "O2 Sensors Present"}
-  ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F416"}, "freq": 300,
-  "signals": [
-    {"id": "LR4_416_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "416 Raw"}
-  ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F419"}, "freq": 300,
-  "signals": [
-    {"id": "LR4_419_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "419 Raw"}
-  ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F41A"}, "freq": 300,
-  "signals": [
-    {"id": "LR4_41A_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "41A Raw"}
-  ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F458"}, "freq": 300,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F458"}, "freq": 60,
   "signals": [
     {"id": "LR4_458_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "458 Raw"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F466"}, "freq": 300,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F466"}, "freq": 5,
   "signals": [
-    {"id": "LR4_466_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "466 Raw"}
+    {"id": "LR4_MAF_A", "path": "Engine", "fmt": { "bix": 8, "len": 16, "max": 2047.96, "div": 32, "unit": "gramsPerSecond" }, "name": "Mass Air Flow A"},
+    {"id": "LR4_MAF_B", "path": "Engine", "fmt": { "bix": 24, "len": 16, "max": 2047.96, "div": 32, "unit": "gramsPerSecond" }, "name": "Mass Air Flow B"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F467"}, "freq": 300,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F467"}, "freq": 60,
   "signals": [
-    {"id": "LR4_467_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "467 Raw"}
+    {"id": "LR4_COOLANT_TEMP_1", "path": "Engine", "fmt": { "bix": 8, "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Coolant Temp Sensor 1"},
+    {"id": "LR4_COOLANT_TEMP_2", "path": "Engine", "fmt": { "bix": 16, "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Coolant Temp Sensor 2"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F468"}, "freq": 300,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F468"}, "freq": 60,
   "signals": [
-    {"id": "LR4_468_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "468 Raw"}
+    {"id": "LR4_IAT_1", "path": "Engine", "fmt": { "bix": 8, "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Intake Air Temp Sensor 1"},
+    {"id": "LR4_IAT_2", "path": "Engine", "fmt": { "bix": 16, "len": 8, "max": 215, "min": -40, "add": -40, "unit": "celsius" }, "name": "Intake Air Temp Sensor 2"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F470"}, "freq": 300,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F470"}, "freq": 15,
   "signals": [
-    {"id": "LR4_470_RAW", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "470 Raw"}
+    {"id": "LR4_F470_B1", "path": "Engine", "fmt": { "bix": 8, "len": 16, "max": 65535, "unit": "scalar" }, "name": "F470 Word 1"},
+    {"id": "LR4_F470_B2", "path": "Engine", "fmt": { "bix": 24, "len": 16, "max": 65535, "unit": "scalar" }, "name": "F470 Word 2"},
+    {"id": "LR4_F470_B3", "path": "Engine", "fmt": { "bix": 40, "len": 16, "max": 65535, "unit": "scalar" }, "name": "F470 Word 3"}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F404"}, "freq": 3,
   "signals": [
@@ -322,7 +310,7 @@
   "signals": [
     {"id": "LR4_DIST_SINCE_CLR", "path": "Trips", "fmt": { "len": 16, "max": 65535, "nullmin": 0, "unit": "kilometers" }, "name": "Distance Since Codes Cleared", "suggestedMetric": "distanceSinceDTCsCleared"}
   ]},
-{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F433"}, "freq": 1,
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F433"}, "freq": 5,
   "signals": [
     {"id": "LR4_BARO", "path": "Engine", "fmt": { "len": 8, "max": 255, "unit": "kilopascal" }, "name": "Barometric Pressure"},
     {"id": "LR4_ALTITUDE", "path": "Movement", "name": "Altitude", "fmt": {"len": 8, "map": {

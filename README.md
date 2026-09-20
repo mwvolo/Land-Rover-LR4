@@ -671,81 +671,56 @@ switch — can be deleted for good rather than on suspicion. Do not read a
 `7F 22 31` as "unsupported" without checking whether an extended session
 would have changed the answer.
 
-### Sixteen more, found by reading the ECM's own PID list
+### Sixteen more, found by reading the ECM's own PID list, and how they did
 
-Every request in this file so far came from watching the bus and guessing.
-On 2026-09-20 the ECM's own mode-01 replies to `0100`, `0120`, `0140` and
-`0160` were decoded instead — these are bitmasks of which mode-01 PIDs the
-module actually supports, and this ECM claims 54 of them. Cross-referencing
-those 54 against this file found 25 with no entry. After excluding metadata
-PIDs (the support bitmasks themselves, monitor status, OBD standard, fuel
-type) and the two SAE aliases already dropped as duplicates (`F423`, `F45C`
-— see Fuel and Engine above), sixteen were worth adding.
+The ECM's `0100`/`0120`/`0140`/`0160` bitmasks report 54 supported mode-01
+PIDs. Twenty-five had no entry here; after removing metadata PIDs and the
+two SAE aliases already dropped, sixteen went in on 2026-09-20 and were
+tested the same day. **All sixteen answered.** Ten earn their place.
 
-Eight got real decodes:
+| Command | Result |
+|---|---|
+| `22F466` | **Two mass airflow sensors.** A 2.09 g/s against B 1.78 g/s, summing to 3.88 against `F410`'s 4.16 a second later |
+| `22F467` | **Two coolant temperature sensors**, 61 °C and 35 °C |
+| `22F468` | **Two intake air temperature sensors**, 36 °C and 59 °C |
+| `22F403` | Fuel system status, two states over 14 samples: open loop on load or decel ×9, closed loop ×5 |
+| `22F42E` | Evap purge duty, 0 to 72.2% |
+| `22F438` | Bank 2 lambda 0.853-1.985 over 29 valid samples; railed at `FFFF` on 23 of 52 |
+| `22F415` | Post-catalyst O2, 0.13-0.93 V and switching |
+| `22F445` / `22F447` | Relative throttle 2.7-22.7%, absolute throttle B 12.5-22.4% |
+| `22F470` | Ten data bytes, undecoded |
 
-| Command | PID | Signal | Why it was worth adding |
-|---|---|---|---|
-| `F403` | `03` | Fuel System Status B1 / B2 | Open loop vs. closed loop — fuel trims only mean something in closed loop |
-| `F438` | `38` | O2 Lambda B2S1 / O2 Voltage B2S1 | Bank 1 lambda has been read via `F434` all along; there was no bank 2 equivalent |
-| `F42E` | `2E` | Commanded Evap Purge | A stuck-open purge valve is a classic cause of both banks running lean at once |
-| `F415` | `15` | O2 Voltage B1S2 / O2 Trim B1S2 | Post-catalyst sensor, bank 1 |
-| `F456` | `56` | Long Term Secondary O2 Trim B1 | Further trim context |
-| `F445` | `45` | Relative Throttle Position | Throttle redundancy |
-| `F447` | `47` | Absolute Throttle Position B | Throttle redundancy |
-| `F413` | `13` | O2 Sensors Present | Bitmask of which O2 sensor positions are physically fitted |
+**The dual mass airflow sensors are the find.** MAF calibration was one of
+three candidate explanations for both banks correcting lean together, and
+`F466` shows the two intake tracts disagreeing by 17.5%. Their sum tracks
+the single `F410` figure, so they are the two halves of the same
+measurement. One sample, taken at idle where these sensors are least
+accurate — a lead, not a finding, and the reason `F466` now runs at `freq` 5.
 
-The other eight are raw single-byte probes, because their meaning isn't
-established: `F416`, `F419`, `F41A`, `F458`, `F466`, `F467`, `F468`, `F470`.
-All that's known is that the ECM claims to support the underlying PIDs.
-They're declared at `len` 8 because the payload width is unknown — reading
-the first byte is always safe, and each should be widened once a real reply
-shows its actual width. See `TESTING.md` for what would count as a result
-for each.
+`F403` matters for the same investigation: the engine does reach closed
+loop, so the 7-9% long-term trims are real measurements rather than
+open-loop artifacts.
 
-This batch was picked to test the lean-trim finding above rather than at
-random: `F403` says whether the engine was in closed loop when the +9%/+7%
-trims were measured, `F42E` tests the stuck-purge-valve hypothesis directly,
-and `F438` gives bank 2's own oxygen sensor behind the bank 2 trim. Together
-they move that finding from an observation toward something diagnosable.
+**Four were declared wrong and recorded nothing useful.** `F466`, `F467`,
+`F468` and `F470` were added at `len` 8 because their payload widths were
+unknown. The first byte of each turns out to be a sensor-support bitmask,
+not data, so all four logged a constant 3 or 2. The figures above came from
+decoding raw frames by hand. Widths are now known and declared properly.
 
-The file is now 89 commands at 10.93 req/s.
+**Three did nothing and are gone.** `F416`, `F419` and `F41A` return `FFFF`,
+not-available, on every sample. The ECM's bitmask claims them; the values do
+not exist.
 
-**Two known inefficiencies**, neither fixable from a signalset:
+**One did its whole job in a single reply and is also gone.** `F413`
+returned `0x77`: bank 1 sensors 1, 2 and 3 and bank 2 sensors 1, 2 and 3 are
+present. That can never change, so it is recorded here instead of polled.
 
-Requests carry no expected-response count. The ELM327 datasheet documents that
-appending a digit (`22F405 1`) lets the adapter return the instant it has that
-many responses instead of waiting out the full timeout, and shows it nearly
-doubling throughput. No request in this vehicle's history uses it.
+Two still need samples: `F456` (three samples, all near zero) and `F458`
+(one sample, `7F`, meaning unknown).
 
-Sparse headers cost triple. Reading one value from a module means `ATSH`, then
-a receive filter, then the read — three round trips for one number. The engine
-module amortises this well at 0.12 setup commands per read; a header carrying a
-single command pays 2.0.
+Barometric pressure moved from `freq` 1 to `freq` 5 to pay for this. It does
+not change at 1 Hz, and it was consuming 0.9 req/s of a budget with no slack.
 
-Multi-DID requests would help most — a single frame holds seven payload bytes,
-enough for `22` plus three identifiers — but the schema caps `cmd` at one
-identifier, so the format cannot express it.
-
----
-
-## Terminal probing
-
-Sidecar's terminal is the fastest way to test a DID.
-
-```
-ATSH 7E0        set request address
-ATCRA 7E8       set response filter
-22F42F          read a DID
-ATAR            restore automatic addressing
-```
-
-**Always finish with `ATAR`.** A left-over `ATCRA` filter blocks replies from
-every other module, which makes the whole app look broken.
-
-Reading a reply — `7E8 04 62 F42F EC` is address, length, positive response,
-echoed DID, then data. `7E8 03 7F 22 31` is a negative response: the DID
-doesn't exist here. `NO DATA` means nothing answered at all.
 
 ### Safety
 
