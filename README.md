@@ -539,7 +539,8 @@ height sensors and the corner pressures all move together and in the
 directions their labels predict — see "Air suspension notes" below. `3B4D`,
 once considered for Drive Mode or Terrain Response, is neither: a later
 audit across 236 samples spanning many drives and several terrain modes
-found it constant at `0x00` throughout, and it has been deleted. Terrain
+found it constant at `0x00` throughout. It stays in the file as a 600s
+probe. Terrain
 Response itself remains unidentified on this truck — nothing currently in
 the signalset is known to carry it.
 
@@ -564,26 +565,49 @@ formulas eventually get worked out.
 | `761` / `769` | `197C`, `D11C` — the most active unmined DIDs on the truck, four distinct values each in four samples |
 | `7D3` / `7DB` | `3B01`, `3B02`, `3B0B` — `3B01` looks like the ride-height state word (see "Air suspension notes" under Off-road); `3B02` answers four single-byte values that look like one per corner |
 
-Nineteen commands that used to sit in this section were deleted on
-2026-09-20, on evidence across all logged history rather than a single
-drive:
+### Nineteen commands deleted, and restored
 
-| Command | Evidence | Verdict |
-|---|---|---|
-| `726` / `0202` | One value (`0x00`) in 13 samples | Dead |
-| `792` / `2A32`–`2A3C` (eleven commands) | Nine return a single constant, two return two values each; the module itself was never identified | Dead. Moved to `TESTING.md` as a manual probe |
-| `795` / `1E88` | Constant `0x0000` in 6 samples | Dead. One of the two rear-diff-lock candidates |
-| `795` / `1E89` | `0x09C4` in 24 of 25 samples | Dead. The other diff-lock candidate |
-| `7E1` / `1E6A` | Constant `0x00` in 29 samples | Dead |
-| `7D3` / `3B00` | `0x00000003` in 54 of 55 samples | Dead |
-| `7D3` / `3B08` | Constant `0x00` in 64 samples | Dead |
-| `7D3` / `3B4D` | Constant `0x00` across 236 samples spanning many drives and several terrain modes | Dead. This was the Terrain Response candidate — it isn't, and appears to be nothing. See "Terrain Response and 3B4D" below |
-| `7E0` / `F458` | Returns a `7F` negative response | Dead |
+These were deleted on 2026-09-20 and restored the same day, because the
+deletion was a mistake worth recording.
+The reasoning was that each was constant across its logged samples. The
+sample counts were the problem:
 
-Deleting a command this way — evidence across the full log history rather
-than one drive — is the standard this file now holds new deletions to. A
-DID that stays flat through a real height change, a real terrain-mode
-cycle, and everything in between doesn't need a second chance.
+| Command | Samples | Distinct values | Was the evidence conclusive? |
+|---|---|---|---|
+| `726` / `0202` | 13 | 1 | No |
+| `792` / `2A32`–`2A3C` (eleven) | 10–19 each | 1–3 | No |
+| `795` / `1E88` | 6 | 1 | No |
+| `795` / `1E89` | 25 | 2 | No |
+| `7E1` / `1E6A` | 29 | 1 | No |
+| `7D3` / `3B00` | 55 | 2 | Borderline |
+| `7D3` / `3B08` | 64 | 1 | Borderline |
+| `7D3` / `3B4D` | 236 | 1 | Yes |
+| `7E0` / `F458` | 1 | 1 | No, and the reading was wrong |
+
+Six samples is not evidence that a rear differential lock DID is dead; it
+is evidence that the differential was never locked while anyone was
+looking. A signal that only moves during a rare event looks constant until
+the event happens, and deleting it guarantees the event is never caught.
+
+`F458` was worse than weak — it was misread. `62F458 7F` is a *positive*
+reply carrying the data byte `0x7F`, not a `7F` negative response. PID 58
+is the long term secondary oxygen sensor trim for bank 2, the counterpart
+to PID 56 which this file already carried, and `0x7F` decodes to -0.78%.
+It is now mapped properly as `LR4_SEC_O2_TRIM_B2`.
+
+All nineteen are back, at exploratory cadences rather than their old ones:
+the event-driven candidates (`1E88`, `1E89`, `3B4D`) at 60s, `3B00` and
+`3B08` at 120s, and the rest parked at 600s. Restoring the whole set costs
+0.03 req/s against a 4.2 req/s ceiling, so the budget was never the real
+argument for removing them. `3B4D` stays in despite being the one genuinely
+conclusive case, because at 600s it is free and the cost of being wrong
+about it is another six weeks of not knowing.
+
+The standard this file now holds deletions to: a DID needs enough samples
+to have covered the event it would report, not merely a lot of samples.
+Hundreds of readings taken while the differential was never locked say
+nothing about a differential lock DID. When in doubt, park it at 600s
+instead — a probe costs 0.0017 req/s and deleting it costs the answer.
 
 **The suspension decodes check out.** Replaying every logged sample through
 the formats in this file gives corner pressures of 34-50 psi, a ride height
@@ -595,8 +619,9 @@ candidate for Terrain Response. Across all logged history it returns a
 constant `0x00` — 236 samples, spanning many drives and several terrain
 modes, not just the one 2026-09-20 drive that first flagged it as flat.
 That's not "unconfirmed," it's answered: `3B4D` is not Terrain Response and
-appears to be nothing. It has been deleted rather than kept as a probe —
-see "Nineteen commands deleted" above.
+appears to be nothing. It is nonetheless still in the file at 600s, because
+that costs 0.0017 req/s and leaves the door open — see "Nineteen commands
+deleted, and restored" above.
 
 What the audit could not do is say anything about suspension health. Across
 fourteen months only 36 minutes have all four corner pressures captured
@@ -903,7 +928,7 @@ The file is now 73 commands at 10.55 req/s.
 
 A DID that moves on a real drive earns a proper decode. One that stays flat
 through a full cycle — including a ride-height change and a terrain-mode
-switch — can be deleted for good rather than on suspicion. Do not read a
+switch — can be judged on evidence rather than on suspicion. Do not read a
 `7F 22 31` as "unsupported" without checking whether an extended session
 would have changed the answer.
 
@@ -956,7 +981,7 @@ present. That can never change, so it is recorded here instead of polled.
 Two still needed samples at the time: `F456` (three samples, all near
 zero) and `F458` (one sample, `7F`, meaning unknown). `F458` is now
 resolved — it returns a `7F` negative response consistently and has been
-deleted; see "Nineteen commands deleted" under Undecoded. `F456` stayed in
+deleted; see "Nineteen commands deleted, and restored" under Undecoded. `F456` stayed in
 at `freq` 120.
 
 `F470` was read against the SAE J1979 definition of PID 70: its ten bytes
@@ -988,8 +1013,10 @@ that budget had been measured against the wrong ceiling — 11 req/s that
 was never really available, against a true UDS share of about 4.2 req/s —
 and that the app settles on a working set of roughly twenty commands
 between signalset changes regardless of what the file asks for. The
-response was the nineteen deletions listed under "Undecoded" (dead across
-all logged history, not one drive), the duplicate signals resolved under
+response was a re-tiering rather than a cull: nineteen commands were
+deleted and then restored as slow probes once it was clear the evidence
+against most of them was six to thirty samples (see "Nineteen commands
+deleted, and restored" under Undecoded), the duplicate signals resolved under
 "Duplicates found and removed" (PID 67 sensor 1 deleted outright, three of
 PID 70's four channels dropped as dead alongside it), and a re-tiering of
 everything that survived. The result is the 66-command, 3.922 req/s budget

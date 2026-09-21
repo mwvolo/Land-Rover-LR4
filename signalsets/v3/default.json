@@ -111,6 +111,106 @@
   "signals": [
     {"id": "LR4_ODOMETER", "path": "Trips", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "kilometers" }, "name": "Odometer", "suggestedMetric": "odometer"}
   ]},
+{ "hdr": "726", "rax": "72E", "cmd": {"22": "0202"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_726_0202_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "726 0202 Raw", "description": "The only non-identification DID ever found on module 726, from a sweep of 0000-03FF. Has only ever returned 00."}
+  ]},
+{ "hdr": "7E1", "rax": "7E9", "cmd": {"22": "1E6A"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_1E6A_RAW", "hidden": true, "path": "Drivetrain", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "1E6A Raw", "description": "Undecoded transmission DID, neighbour of the gearbox temperature."}
+  ]},
+{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E88"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_1E88_RAW", "hidden": true, "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E88 Raw", "description": "Undecoded rear differential DID. Flat at 0000 on every sample so far; a lock cycle is the test."}
+  ]},
+{ "hdr": "795", "rax": "79D", "cmd": {"22": "1E89"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_1E89_RAW", "hidden": true, "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E89 Raw", "description": "Undecoded rear differential DID. Flat at 09C4 on every sample so far."}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A32_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A32 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A33"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A33_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A33 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A34"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A34_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A34 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A35"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A35_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A35 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A36_RAW", "hidden": true, "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A36 Distance Counter"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A37"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A37_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A37 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A38"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A38_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A38 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A39"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A39_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A39 Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3A"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A3A_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3A Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3B"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A3B_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A3B Raw"}
+  ]},
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A3C"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_2A3C_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A3C Raw"}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B00"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_3B00_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B00 Raw", "description": "Undecoded suspension DID. Flat through a real ride-height change, but on three samples only."}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B08"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_3B08_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B08 Raw", "description": "Undecoded suspension DID. Flat through a real ride-height change, but on three samples only."}
+  ]},
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_3B4D_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "3B4D Raw", "description": "Previously labelled Drive Mode, which it is not: it has read 0 on every sample ever taken, including through ride-height changes. A Terrain Response change is the untried test."}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F458"}, "freq": 120,
+  "signals": [
+    {"id": "LR4_SEC_O2_TRIM_B2", "path": "Fuel", "fmt": { "len": 8, "max": 99.2, "min": -100, "mul": 100, "div": 128, "add": -100, "unit": "percent" }, "name": "Long Term Secondary O2 Trim B2", "description": "SAE J1979 PID 58, the bank 2 counterpart to PID 56. Previously carried as an undecoded raw byte and briefly deleted on the mistaken reading that its single logged reply was a negative response; 62F458 7F is a positive reply meaning -0.78%."}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F423"}, "freq": 60,
+  "signals": [
+    {"id": "LR4_FUEL_RAIL_GAUGE_P", "path": "Fuel", "fmt": { "len": 16, "max": 655350, "mul": 10, "unit": "kilopascal" }, "name": "Fuel Rail Gauge Pressure", "description": "SAE J1979 PID 23. Answers: 158 logged samples ranging 0x015F to 0x07B6, which scales to 35 to 197 bar and is the right shape for this engine's direct injection rail. Compare against the proprietary rail pressure DID 033E, which reads far lower on the same engine; one of the two is scaled wrong and this one matches the hardware."}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F401"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_MONITOR_STATUS", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "Monitor Status Raw", "description": "SAE J1979 PID 01: MIL state, stored DTC count and readiness monitors. Listed as supported by the ECM's own bitmask but never once requested. Top byte is the DTC count with the MIL bit; a non-zero value here is the cheapest possible check for a stored fault."}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F441"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_MONITOR_THIS_CYCLE", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "Monitor Status This Cycle Raw", "description": "SAE J1979 PID 41, readiness monitors for the current drive cycle. Supported per the ECM bitmask, never requested. Changes across a drive as monitors complete, so unlike PID 01 it should not be static."}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F413"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_O2_SENSORS_PRESENT", "hidden": true, "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "O2 Sensors Present Raw", "description": "SAE J1979 PID 13, a bitmask of which oxygen sensor positions exist. Answered 0x77 on its one logged sample. Static, but it says exactly which O2 PIDs are worth probing."}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F451"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_FUEL_TYPE", "hidden": true, "path": "Fuel", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Fuel Type Raw", "description": "SAE J1979 PID 51. Supported per the ECM bitmask, never requested. Static, one sample settles it."}
+  ]},
+{ "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F41C"}, "freq": 600,
+  "signals": [
+    {"id": "LR4_OBD_STANDARD", "hidden": true, "path": "ECU", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "OBD Standard Raw", "description": "SAE J1979 PID 1C, which OBD standard this ECM claims. Supported per the bitmask, never requested. Static."}
+  ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F403"}, "freq": 120,
   "signals": [
     {"id": "LR4_FUEL_SYS_B1", "path": "Fuel", "fmt": { "len": 8, "max": 255, "map": { "1": { "description": "Open loop, engine cold", "value": "OpenLoopCold" }, "2": { "description": "Closed loop", "value": "ClosedLoop" }, "4": { "description": "Open loop, load or decel fuel cut", "value": "OpenLoopLoad" }, "8": { "description": "Open loop, system fault", "value": "OpenLoopFault" }, "16": { "description": "Closed loop with a feedback fault", "value": "ClosedLoopFault" } } }, "name": "Fuel System Status B1"},

@@ -152,6 +152,13 @@ These have all actually bitten:
    one day's sessions without the months behind them, and coverage
    recovers on its own every time the file changes.
 
+   A corollary for pruning: a quiet command is not a dead one. Nineteen
+   commands were deleted on 2026-09-20 for being constant and restored the
+   same day, because most had between 6 and 30 samples and none of those
+   samples covered the event the command would report — `1E88`'s six were
+   all taken with the differential unlocked. A probe costs 0.0017 req/s at
+   `freq` 600. Deleting it costs the answer. Park it, don't cull it.
+
 6. **Standard mode-01 PIDs are already being polled by the app, constantly,
    and a proprietary DID may duplicate one.** Before adding a signal, check
    whether the truck already answers it somewhere cheaper, and check whether
