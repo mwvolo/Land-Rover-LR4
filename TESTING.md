@@ -11,16 +11,19 @@ not on suspicion.
 
 ## Open in-vehicle tasks
 
-- [ ] **Re-run `22F187` against module `726`.** Every other module rejected it with NRC 31, but `726` returned a malformed reply carrying VIN bytes instead. Terminal sequence: `ATSH 726`, `ATCRA 72E`, `22F187`.
+- [ ] **Reset the Pelican app's learned vehicle profile — before any of the suspension or differential tasks below.** The app has permanently dropped five ECUs and will not retry them. Scan logs from 2026-09-20 show it addressing every module at 09:57, then losing `726` and `761` by 10:59, `732` and `792` by 12:40, and `7D3` by 14:07 — all while those modules were still answering correctly. The 15:14 off-road drive ran 137 minutes with 61 of 84 commands never sent once, and collected zero suspension data (ride height, terrain response and the suspension pressures all live on `7D3`) and zero differential data (the diff-lock DIDs live on `795`, which wasn't even among the 23 commands still being polled by then). **Nothing in this repo can fix this.** It needs the owner to reset the app's learned profile, most likely by removing and re-adding the vehicle in the app, before it happens again.
+- [ ] **Verify the cut-down signalset on the next drive.** The polling budget was cut from 10.53 req/s to 3.922 req/s (109 commands down to 66) because measurement showed the app only ever delivers about 4.2 req/s to signalset traffic, no matter how many commands are in the file — see the profile-reset task above for what overdrawing that ceiling does. Two explicit pass criteria: (1) all 66 commands are actually being polled, and (2) no further module gets retired.
+- [ ] **Re-run `22F187` against module `726`.** Every other module rejected it with NRC 31, but `726` returned a malformed reply carrying VIN bytes instead. Terminal sequence: `ATSH 726`, `ATCRA 72E`, `22F187`. (Unaffected by the profile-reset issue above — this is a hand-typed terminal probe, not app polling.)
 - [x] **Confirm which signalset version the Pelican app is actually holding.** Done 2026-09-20: the app was holding a stale signalset. A forced refresh brought all 109 commands into the poll cycle — `F40C` answered 172 of 172 requests, and engine speed was recorded for the first time.
-- [x] **A drive with a ride-height change.** Done 2026-09-20: `3B01`, `3B3C`, all four corner pressures, both height sensors and the compressor all moved. Access height did register — in the pressures and height sensors — contrary to what it looked like from the driver's seat.
-- [ ] **A drive with a terrain-mode change.** `3B4D`, labelled Drive Mode, has returned `0` on all 171 samples ever taken. Cycle through terrain response settings to find out whether the label or the byte offset is wrong. Update 2026-09-20: also returned `0` on all 48 samples through every ride-height change on this drive, so it survived a real state change unmoved. Renamed `LR4_3B4D_RAW` — a terrain-response change is now the only thing left that can identify it.
-- [ ] **A rear-differential lock cycle.** `1E88` and `1E89` on module `795` have never moved.
+- [x] **A drive with a ride-height change.** Done 2026-09-20: `3B01`, `3B3C`, all four corner pressures, both height sensors and the compressor all moved. Access height did register — in the pressures and height sensors — contrary to what it looked like from the driver's seat. Update 2026-09-20 (log review): the reason Access looked unreliable was ours — `3B3C` is a bitfield, not an ordinal. Observed values across all history are `0x01` (216 samples), `0x02` (11), `0x04` (5), `0x0D` (4); the old map ran 0-3 with 0 labelled Access, and 0 never occurs. Pinned against the inverted front height sensor, where a falling value means the truck is rising: `0x01` (front mean 111.4) is Normal, `0x02` (front mean 90.4, truck highest) is Off-Road, `0x04` (front mean 133.0, truck lowest) is Access, `0x0D` (front mean 120.5) is in transit. Map corrected to `1, 2, 4, 13`. Access should register cleanly once `7D3` is being polled again — see the profile-reset task above.
+- [ ] **Confirm `3B01` bit `0x400`.** `0x100` is pinned to Normal and `0x800` to Access, both measured against the height sensor. `0x400` has been seen once and never alongside a height sample — Off-Road by elimination, unconfirmed. Needs a deliberate Off-Road selection, once `7D3` is answering again.
+- [ ] **Find a working rear-differential-lock DID on `795`, if the owner still wants this signal.** `1E88` (constant `0000` across 6 samples) and `1E89` (constant `09C4` in 24 of 25 samples) were both effectively dead and have been deleted. A different DID, found by manual probing, is the only way back to this.
 - [ ] **A cold start.** Needed for the warm-up curves on `113F` and `2104`, and to catch the crank dip on `1153`/`1154`.
-- [ ] **Identify module `792`.** Its whole `2A3x` block is static and nothing is known about it. Try `22F18C` and `22F191` against it the way the other six unmined modules were probed on 2026-09-19.
-- [ ] **Mine the four still-unidentified modules** — `716`, `726`, `737`, `797`. Each returned a distinct ECU serial via `22F18C` but rejected `22F191`, so they are real and separate but their function is unknown.
+- [ ] **Identify module `792`.** Dropped from the signalset entirely on 2026-09-20 — its eleven `2A3x` DIDs came back nine constants and two near-constants, and the module itself has never been identified. Not worth polling any more; still worth one terminal sweep. Try `22F18C` and `22F191` against it the way the other six unmined modules were probed on 2026-09-19.
+- [ ] **Mine the four still-unidentified modules** — `716`, `726`, `737`, `797`. Each returned a distinct ECU serial via `22F18C` but rejected `22F191`, so they are real and separate but their function is unknown. (`726`'s only known DID, `0202`, was deleted from the signalset on 2026-09-20 for staying `00` across 13 samples — the module itself is still unidentified.)
 - [ ] **Sweep module `760` for wheel speeds.** `760` was identified as the ABS/brake module on 2026-09-19 and has never been mined. Individual wheel speeds would enable dragging-brake detection, a tire-size mismatch check, and a better speed reference than the single `F40D` value. A parked terminal sweep — no drive needed.
 - [ ] **Read fault codes.** This file has no DTC coverage at all — modes `03` (stored), `07` (pending), `0A` (permanent), plus UDS service `19` for the non-OBD modules. Pending codes are the earliest warning available on a vehicle this age and have never been looked at. This probably can't be expressed in an OBDb signalset, so it stays a terminal task rather than something to add to `default.json`.
+- [ ] **Sanity-check the computed fuel-rate synthetic against real fill-ups.** PID `5E` isn't supported per the ECM's own supported-PID bitmask, so fuel rate can't be read directly — it's now derived from MAF and commanded lambda instead. Validated to within about 18% of the tank gauge over one 91.5 km drive; comparing against a few real fill-ups is the only way to actually calibrate it.
 
 ---
 
@@ -180,32 +183,17 @@ moved" so far only means "never moved while parked."
 
 | Module | DID | `freq` | What we think it is | What would count as a result |
 |---|---|---|---|---|
-| `726` | `0202` | 60 | Only DID found on module 726 — still 00 after 12 samples | Whether it ever leaves 00 |
 | `761` | `197C` | 30 | Unknown, 4 distinct values in 4 samples on the 2026-09-20 drive — with `D11C`, the most active unmined DIDs on the truck | Any correlation with a cabin or body state |
 | `761` | `D11C` | 30 | Unknown, 3A-41 (58-65); 4 distinct values in 4 samples on the 2026-09-20 drive — with `197C`, the most active unmined DIDs on the truck | Plausible temperature; compare against F446 ambient |
-| `792` | `2A32` | 600 | Undecoded, ticked by a small amount on the 2026-09-20 drive — consistent with a counter | Confirm counter behavior over a longer drive; rest of the `2A3x` block stayed flat |
-| `792` | `2A33` | 600 | Undecoded, constant 00033E0A in 15 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A34` | 600 | Undecoded, constant 000008C0 in 15 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A35` | 600 | Undecoded, constant 00051E28 in 11 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A37` | 600 | Undecoded, ticked by a small amount on the 2026-09-20 drive — consistent with a counter | Confirm counter behavior over a longer drive; rest of the `2A3x` block stayed flat |
-| `792` | `2A38` | 600 | Undecoded, constant 00001A in 12 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A39` | 600 | Undecoded, constant 000002 in 12 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A3A` | 600 | Undecoded, constant 00001F in 14 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A3B` | 600 | Undecoded, constant 00000000 in 7 samples (all parked) | Drop if still flat after a full drive cycle |
-| `792` | `2A3C` | 600 | Undecoded, constant 000000 in 7 samples (all parked) | Drop if still flat after a full drive cycle |
-| `795` | `1E88` | 600 | Rear diff, always 0000 — still flat on the 2026-09-20 drive | Any movement under lock engagement |
-| `795` | `1E89` | 600 | Rear diff, always 09C4 (2500) — still flat on the 2026-09-20 drive | Looks like a constant or a limit; drop if flat after a lock cycle |
-| `7D3` | `3B00` | 30 | Suspension, still flat through the 2026-09-20 ride-height change (3 samples) | One more look at `freq` 30 before deletion |
 | `7D3` | `3B01` | 10 | Suspension, three values seen on the 2026-09-20 ride-height change (`00000400`, `00000100`, `00000800`) — looks like a ride-height state word | Needs enough samples to map each value to a height |
-| `7D3` | `3B08` | 30 | Suspension, still flat through the 2026-09-20 ride-height change (3 samples) | One more look at `freq` 30 before deletion |
 | `7E0` | `F41F` | 30 | Run time since start (PID 1F) | Records as a signal - this is the alias-mechanism test against standard 011F |
-| `7E1` | `1E6A` | 600 | Undecoded, constant 00 in 27 samples (all parked) | Drop if still flat after a full drive cycle |
 | `7E1` | `DD01` | 600 | Undecoded, constant 025166 in 1 samples (all parked) | Drop if still flat after a full drive cycle |
-| `7E0` | `F458` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 | `7E0` | `F466` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 | `7E0` | `F467` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 | `7E0` | `F468` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
 | `7E0` | `F470` | 300 | Raw single-byte probe from the ECM's own supported-PID bitmask decode; no data read yet | Whether it answers at all, and what payload width comes back |
+
+**Deleted 2026-09-20:** `726/0202`, all eleven of `792`'s `2A3x` DIDs (`2A32`-`2A3C`), `795/1E88`, `795/1E89`, `7E1/1E6A`, `7D3/3B00`, `7D3/3B08` and `7E0/F458` — nineteen commands in total, counting `7D3/3B4D` (Terrain Response, already renamed `LR4_3B4D_RAW` before this pass) which never had a row here. Every one was killed by the same criterion: a constant or near-constant value held across enough samples — parked and driving both — to be conclusive.
 
 ---
 
@@ -215,7 +203,7 @@ A two-hour drive with light off-roading on 2026-09-20 was set up to exercise
 the features that short commuter runs never touch. What was re-tiered for it,
 and what to look for afterwards:
 
-| Command | `freq` | What the drive should produce |
+| Command | `freq` | What the drive was meant to produce |
 |---|---|---|
 | `7E0/F466` | 5 | Whether the 17.5% disagreement between the two mass airflow sensors holds up under load, or was an idle artifact |
 | `795/1E88`, `795/1E89` | 30 | First data through a rear differential lock cycle. Both have been flat at `0000` and `09C4` on every sample ever taken |
@@ -227,6 +215,30 @@ and what to look for afterwards:
 Barometric pressure dropped from `freq` 1 to `freq` 5 to pay for the above.
 It does not change at 1 Hz and was taking 0.9 req/s of a budget that had no
 slack. Total demand is 10.53 req/s across 85 commands.
+
+**Outcome, found in the scan logs afterward:** this is the drive that caused
+the ECU retirement described at the top of this file. The app addressed
+every module at 09:57, then dropped `726` and `761` by 10:59, `732` and
+`792` by 12:40, and `7D3` by 14:07 — over an hour before the 15:14 off-road
+segment even started. 10.53 req/s across 85 commands was never a demand the
+app could sustain; it only ever delivers about 4.2 req/s to signalset
+traffic. The suspension and differential re-tiering above (`7D3/3B01`,
+`7D3/3B4D`, `795/1E88`, `795/1E89`) collected nothing, because those
+modules were already gone by the time the off-road segment ran. The budget
+has since been cut to 3.922 req/s across 66 commands — see the verification
+task in "Open in-vehicle tasks" above.
+
+Three rows in that table are now answered, from earlier sessions in the same
+log rather than from the drive itself. `7D3/3B4D` is dead: constant `0x00`
+across 236 samples spanning several terrain modes, so a mode change was not
+the missing ingredient and the command has been deleted. `795/1E88` and
+`795/1E89` are dead on the same evidence and are also gone. `7E0/F466`'s
+17.5% disagreement did not survive contact with data: across 1,474 samples
+the two channels sum to 0.88 of the single mass airflow PID by least squares,
+with individual pairs scattering far too widely to trust the split. The
+17.5% figure came from one idle sample. `7E0/F470` turned out to be manifold
+pressure at 1/32 kPa rather than a separate boost sensor, tracking the
+manifold pressure PID to within 1.3 kPa over 525 pairs.
 
 ## Manual-probe-only DIDs
 
@@ -305,5 +317,4 @@ Open questions that aren't in-vehicle tasks — they need log analysis or a
 decision, not a drive:
 
 - Both banks are correcting lean together by 7-9% long term (B1 +9.31%, B2 +7.32%), which points at fuel delivery, MAF calibration or an unmetered air leak rather than a per-bank fault. One drive, single-digit sample counts — needs confirming.
-- What `3B01`'s bit flags mean, and which bit corresponds to which height.
 - What `761/197C` and `761/D11C` measure.
