@@ -128,19 +128,29 @@ These have all actually bitten:
    the main checkout, or the agent must be told explicitly to check out that
    branch — otherwise it silently operates on stale files and produces
    confident, wrong results.
-5. **The app retires ECUs permanently when the signalset overdraws its
-   request budget, and it never retries them.** Measured on 2026-09-20: at
-   09:57 the app addressed every header the signalset names; by 10:59 it
-   had stopped addressing `726` and `761`; by 12:40 `732` and `792`; by
-   14:07 `7D3`. The modules were answering correctly when they were
-   dropped. On the 137-minute drive that followed, 61 of 84 commands were
-   never sent once — not throttled, never requested. **A command's presence
-   in this file does not mean it is being collected.** Check the scan logs
-   before relying on one. Nothing in this repo can un-retire a module; the
-   app's learned vehicle profile has to be reset from inside the app. The
-   defence is to stay under the 4.2 req/s ceiling and to delete commands
-   that have been proven dead rather than leaving them in at a slow `freq`,
-   because each one still costs a module-discovery attempt.
+5. **The app settles on a working set of roughly twenty commands and
+   ignores the rest, however big this file is.** Taking the longest session
+   of each day since 2026-09-05, coverage has been 12 to 23 distinct DIDs
+   every time, including the 137-minute drive on 09-20 that polled 23 — the
+   widest of any long session in the period. Coverage spikes right after
+   the signalset changes (108 DIDs on the morning of 09-20, 965 during a
+   PID detector run) and then settles back within hours.
+
+   The stable core is exactly the metric-carrying commands. Thirteen
+   commands appear in every long session since 09-05, and they are
+   precisely thirteen of the sixteen that carried a `suggestedMetric` at
+   the time. Read with trap 8, the rule is that **the app converges on
+   polling what it will store.** Modules with no metric-bearing command on
+   them — `7D3`, `792`, `732`, `726`, `761` — drift out of the rotation
+   entirely.
+
+   **A command's presence in this file does not mean it is being
+   collected.** Check the scan logs before relying on one. But do not read
+   a quiet module as a broken or "retired" one: an earlier version of this
+   trap claimed the app permanently retires ECUs and told the owner to
+   reset the app's vehicle profile. That was wrong. It came from reading
+   one day's sessions without the months behind them, and coverage
+   recovers on its own every time the file changes.
 
 6. **Standard mode-01 PIDs are already being polled by the app, constantly,
    and a proprietary DID may duplicate one.** Before adding a signal, check

@@ -211,9 +211,10 @@ height, rising with load and with raised height modes.
 **None of this module's signals carry a `suggestedMetric`, and the app
 only ever stores signals that do** — see "Only signals with a metric are
 ever recorded" under Polling. Corner pressures, ride height, compressor
-activity and module voltage are all live-only: even once `7D3` is
-un-retired and answering again, nothing from this table will ever show up
-in the app's own history, only in the raw scan logs.
+activity and module voltage are all live-only: even when `7D3` is being
+polled, nothing from this table will ever show up in the app's own
+history, only in the raw scan logs. It is also why the app drifts away
+from asking `7D3` anything at all between signalset changes.
 
 ---
 
@@ -487,23 +488,27 @@ suspension and rear differential. It produced none of that data. Every
 signal the test was aimed at lives on a module the app had already stopped
 addressing before the drive started: ride height, height sensors, corner
 pressures, compressor activity and Terrain Response all live on `7D3`,
-which the app retired at 14:07 that day, over an hour before the drive
-began. The two rear-differential-lock candidates lived on `795`, which the
-app was still addressing, but neither DID was among the 23 commands it
-chose to poll that session — see "The app retires ECUs permanently, one
-session at a time" under Polling for why.
+which the app had not addressed since 14:07 that day. The two
+rear-differential-lock candidates lived on `795`, which the app was still
+addressing, but neither DID was among the 23 commands it polled that
+session.
+
+This is not damage and it is not new. Long sessions have settled to
+between 12 and 23 commands for six weeks, and this drive's 23 was the
+widest coverage of any long session in that period — see "The app
+converges on a small working set" under Polling. The suspension module
+carries no metric-bearing command, so the app has no reason to keep asking
+it anything once the novelty of a signalset change wears off.
 
 Everything below about air suspension and the rear differential was
 recovered from earlier sessions already present in the same log file, not
-from this drive. Until the app's learned vehicle profile is reset, no
-suspension or gear-selector data will be collected on a drive no matter
-what this signalset asks for.
+from this drive.
 
-And even once it is reset: none of the suspension signals carry a
-`suggestedMetric`, so none of them will ever be recorded as *history* by
-the app regardless — see "Only signals with a metric are ever recorded"
-under Polling. Un-retiring `7D3` restores live readouts and raw scan-log
-coverage, not a trip history for ride height or corner pressure.
+The deeper constraint is separate and permanent: none of the suspension
+signals carry a `suggestedMetric`, so none of them will ever be recorded as
+*history* by the app — see "Only signals with a metric are ever recorded"
+under Polling. Getting `7D3` polled again restores live readouts and raw
+scan-log coverage, not a trip history for ride height or corner pressure.
 
 ### Air suspension
 
@@ -705,52 +710,82 @@ more than double. Engine speed is back on a real cadence (2s) and carries
 the `engineSpeed` metric; it had not been polled since 2026-08-30 — see
 below for why.
 
-### The app retires ECUs permanently, one session at a time
+### The app converges on a small working set, and it is roughly what it can store
 
-Headers the app actually addressed, by session, on 2026-09-20:
+An earlier version of this section claimed the app "retires ECUs
+permanently" in a one-way ratchet, and recommended resetting the app's
+vehicle profile. **That was wrong, and it was wrong because it read a
+single day's sessions without checking the months behind them.** The
+correction is recorded here rather than deleted, because the wrong version
+was convincing.
 
-| Time | Headers addressed |
-|---|---|
-| 09:57 | `726`, `732`, `761`, `792`, `795`, `7D3`, `7DF`, `7E0`–`7E7` — everything this file names |
-| 10:59 | `726` and `761` gone |
-| 12:40 | `732` and `792` gone |
-| 14:07 | `7D3` gone |
-| 15:14 (session 2525, the off-road drive) | Unchanged from 14:07 |
+What the daily history actually shows, taking the longest session of each
+day since 2026-09-05 — the only sessions comparable to a drive:
 
-Once a module is dropped it is never retried. This is a ratchet, not a
-fluctuation, and it isn't about the modules going bad: in the 12:40 session
-every `7D3` command returned a valid response right up until the app
-stopped asking.
+| Session | Date | Minutes | Distinct DIDs polled |
+|---|---|---|---|
+| 2397 | 09-05 | 67.2 | 13 |
+| 2402 | 09-06 | 25.9 | 17 |
+| 2426 | 09-09 | 63.9 | 17 |
+| 2441 | 09-10 | 57.8 | 17 |
+| 2460 | 09-11 | 63.9 | 17 |
+| 2470 | 09-13 | 35.5 | 17 |
+| 2495 | 09-19 | 50.0 | 19 |
+| 2497 | 09-19 | 38.7 | 18 |
+| 2525 | 09-20 | 137.7 | **23** |
 
-During session 2525's 137-minute drive, 61 of this file's 84 commands (the
-count before today's cut to 66) were never sent once — not throttled, not
-degraded, never requested. The 23 that were polled all start at minute 0.1
-or 0.6 and run continuously to minute 137.4, so this isn't a mid-drive
-dropout either. It also isn't the stale-signalset explanation from
-2026-08-30, reframed below: no commit in this file's history matches the
-polled set, and four commands added earlier the same day were among the 23
-being polled — a stale copy of the file wouldn't include same-day
-additions.
+Long sessions have settled to between 12 and 19 commands for six weeks.
+The off-road drive polled 23, which is *more than any other long session in
+the period*. The drive was not degraded. It was the best long session on
+record, and the 61-of-84 figure is simply what this app has always done.
 
-**A command's presence in this file does not mean it is being collected.**
-Check the scan logs before relying on one. Nothing in this repo can
-un-retire a module — the app has learned that `7D3`, `792`, `732`, `726`
-and `761` don't answer and has stopped addressing them, and that has to be
-reset from inside the app (probably by removing and re-adding the
-vehicle), not from this file. Whether staying under the 4.2 req/s ceiling
-stops the ratchet from taking more modules is untested; the next drive is
-the test.
+The stable core is the interesting part. Thirteen commands appear in every
+long session going back to 09-05: `03F3`, `1E69`, `DD01`, `F404`, `F405`,
+`F406`, `F40D`, `F410`, `F42F`, `F431`, `F434`, `F442`, `F444`. Those are
+exactly thirteen of the sixteen commands that carried a `suggestedMetric`
+at the time. Not approximately — exactly. The three metric-carrying
+commands missing from the core are `F40C`, `F411` and `F443`, and `F411`
+joined the working set later.
 
-### Eight commands went quiet for three weeks — the first sighting of the ratchet, not a separate incident
+Read alongside "Only signals with a metric are ever recorded" below, the
+behaviour is coherent: **the app converges on polling the commands whose
+values it is going to keep.** Commands without a metric get exercised for a
+while after the signalset changes and then thin out, because the app has
+nothing to do with their values.
+
+That also explains the peripheral modules without inventing a ratchet.
+`7D3`, `792`, `732`, `726` and `761` do not carry a single metric-bearing
+command between them. They are not being punished; there is nothing on them
+the app would store.
+
+The one-day pattern that produced the ratchet theory is real but means
+something duller. Coverage spikes after the signalset changes and then
+settles: 108 distinct DIDs at 09:57 on 09-20, then 54, 58, 19 and 23 as the
+day went on, with several PRs merged in between. Session 2493 on 09-19 hit
+965 DIDs, which was the PID detector sweep. Coverage recovers on its own
+every time the file changes. **Nothing is stuck, and nothing needs
+resetting from inside the app.**
+
+**A command's presence in this file still does not mean it is being
+collected** — check the scan logs before relying on one. But the reason is
+ordinary triage by the app, not damage.
+
+What remains untested is whether cutting the request budget changes which
+commands make the working set. Asking for 10.53 req/s against a 4.2 req/s
+ceiling meant the app chose the 40% it would serve; asking for 3.922 means
+it does not have to choose. Whether it then serves all 66 is exactly what
+the next drive measures.
+
+### Eight commands went quiet for three weeks — the first sighting of the working set, not a separate incident
 
 This section originally explained an isolated 2026-08-30 incident as a
-stale copy of the signalset on the app's side. It wasn't isolated. It was
-the first visible symptom of the retirement ratchet described above, and
-at the time nobody knew the ratchet existed. The history below is kept
-as-is because the reasoning in it — ruling out the request budget and the
-`freq` tiers before landing on "the app must be holding stale data" — was
-a reasonable read of the evidence available that day. It just wasn't the
-right answer.
+stale copy of the signalset on the app's side. It wasn't isolated, and the
+stale copy was only half of it. Those eight commands were sitting outside
+the working set the app settles on between signalset changes, described
+above. The history below is kept as-is because the reasoning in it — ruling
+out the request budget and the `freq` tiers before landing on "the app must
+be holding stale data" — was a reasonable read of the evidence available
+that day, and because the refresh really did bring them back for a while.
 
 Between 2026-08-30 and 2026-09-19, eight commands in this file were never
 requested on a drive: `F40C`, `F411`, `F40E`, `F443`, `F449`, `F44A`, `F407`
@@ -763,10 +798,14 @@ and `LR4_PEDAL_AGREEMENT` needing `F449` and `F44A`.
 polled that morning. `F40C` was requested 172 times and answered 172
 times, and engine speed was recorded for the first time in fourteen
 months. At the time this was credited to the app picking up a fresher copy
-of the signalset. Later the same day, session 2525 showed the real
-pattern: the app hadn't fixed anything, it had simply not yet retired the
-modules carrying those eight commands. It went on to retire four more
-modules that same day.
+of the signalset, and that reading has held up: coverage does spike right
+after the file changes. What it does not do is stay there. By the 15:14
+session the working set was back to 23 commands, and `F40C` was outside it
+again. The eight commands were never broken; they sit outside the set the
+app settles on between signalset changes, which is roughly the commands
+whose values it stores. `F40C` carries `engineSpeed` and should have been
+in that set, and its absence is the one part of this that is still
+unexplained.
 
 Getting to the "stale signalset" explanation meant ruling out the two
 obvious causes, and both remain worth knowing even though the explanation
@@ -947,7 +986,8 @@ The narrative above tracks the file growing to 89 commands at 10.93 req/s
 over the course of 2026-09-20. Later the same day, session 2525 showed
 that budget had been measured against the wrong ceiling — 11 req/s that
 was never really available, against a true UDS share of about 4.2 req/s —
-and that four more ECUs had been permanently retired in the meantime. The
+and that the app settles on a working set of roughly twenty commands
+between signalset changes regardless of what the file asks for. The
 response was the nineteen deletions listed under "Undecoded" (dead across
 all logged history, not one drive), the duplicate signals resolved under
 "Duplicates found and removed" (PID 67 sensor 1 deleted outright, three of
@@ -988,8 +1028,8 @@ temperature or boost. **None of those can ever be looked at historically
 through the app.** They exist live, or in the raw scan logs, and nowhere
 else.
 
-That includes the suspension work in its entirety. Even once the retired
-`7D3` module is polled again, no ride height and no corner pressure will be
+That includes the suspension work in its entirety. Even when the
+`7D3` module is being polled, no ride height and no corner pressure will be
 recorded as history. It includes the charge cooler coolant temperature newly
 decoded from PID 67 sensor 2 — a real signal, genuinely new, that will never
 persist.

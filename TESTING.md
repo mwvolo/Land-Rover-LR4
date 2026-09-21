@@ -11,8 +11,8 @@ not on suspicion.
 
 ## Open in-vehicle tasks
 
-- [ ] **Reset the Pelican app's learned vehicle profile — before any of the suspension or differential tasks below.** The app has permanently dropped five ECUs and will not retry them. Scan logs from 2026-09-20 show it addressing every module at 09:57, then losing `726` and `761` by 10:59, `732` and `792` by 12:40, and `7D3` by 14:07 — all while those modules were still answering correctly. The 15:14 off-road drive ran 137 minutes with 61 of 84 commands never sent once, and collected zero suspension data (ride height, terrain response and the suspension pressures all live on `7D3`) and zero differential data (the diff-lock DIDs live on `795`, which wasn't even among the 23 commands still being polled by then). **Nothing in this repo can fix this.** It needs the owner to reset the app's learned profile, most likely by removing and re-adding the vehicle in the app, before it happens again.
-- [ ] **Verify the cut-down signalset on the next drive.** The polling budget was cut from 10.53 req/s to 3.922 req/s (109 commands down to 66) because measurement showed the app only ever delivers about 4.2 req/s to signalset traffic, no matter how many commands are in the file — see the profile-reset task above for what overdrawing that ceiling does. Two explicit pass criteria: (1) all 66 commands are actually being polled, and (2) no further module gets retired.
+- [ ] **Get the suspension module back into the polling rotation.** `7D3` carries no metric-bearing command, and the app converges on polling only what it stores, so it drifts out of the rotation between signalset changes. It was last addressed at 14:07 on 2026-09-20 and the 15:14 off-road drive collected no suspension data at all. Coverage does come back on its own whenever the signalset changes, so merging a PR is the cheap lever: check the first drive after a merge. Do **not** delete and re-add the vehicle — nothing is stuck, and an earlier version of this task wrongly said it was.
+- [ ] **Verify the cut-down signalset on the next drive.** The polling budget was cut from 10.53 to 3.922 req/s (85 commands down to 66) because measurement showed the app only ever delivers about 4.2 req/s to signalset traffic, no matter how many commands are in the file. Asking for 10.53 against a 4.2 ceiling meant the app picked which 40% to serve; asking for 3.922 means it does not have to pick. Two pass criteria: (1) all 66 commands are actually polled, and (2) coverage on a long drive beats 23 distinct DIDs, which is the best any long session has managed in six weeks.
 - [ ] **Re-run `22F187` against module `726`.** Every other module rejected it with NRC 31, but `726` returned a malformed reply carrying VIN bytes instead. Terminal sequence: `ATSH 726`, `ATCRA 72E`, `22F187`. (Unaffected by the profile-reset issue above — this is a hand-typed terminal probe, not app polling.)
 - [x] **Confirm which signalset version the Pelican app is actually holding.** Done 2026-09-20: the app was holding a stale signalset. A forced refresh brought all 109 commands into the poll cycle — `F40C` answered 172 of 172 requests, and engine speed was recorded for the first time.
 - [x] **A drive with a ride-height change.** Done 2026-09-20: `3B01`, `3B3C`, all four corner pressures, both height sensors and the compressor all moved. Access height did register — in the pressures and height sensors — contrary to what it looked like from the driver's seat. Update 2026-09-20 (log review): the reason Access looked unreliable was ours — `3B3C` is a bitfield, not an ordinal. Observed values across all history are `0x01` (216 samples), `0x02` (11), `0x04` (5), `0x0D` (4); the old map ran 0-3 with 0 labelled Access, and 0 never occurs. Pinned against the inverted front height sensor, where a falling value means the truck is rising: `0x01` (front mean 111.4) is Normal, `0x02` (front mean 90.4, truck highest) is Off-Road, `0x04` (front mean 133.0, truck lowest) is Access, `0x0D` (front mean 120.5) is in transit. Map corrected to `1, 2, 4, 13`. Access should register cleanly once `7D3` is being polled again — see the profile-reset task above.
@@ -217,14 +217,17 @@ It does not change at 1 Hz and was taking 0.9 req/s of a budget that had no
 slack. Total demand is 10.53 req/s across 85 commands.
 
 **Outcome, found in the scan logs afterward:** this is the drive that caused
-the ECU retirement described at the top of this file. The app addressed
-every module at 09:57, then dropped `726` and `761` by 10:59, `732` and
-`792` by 12:40, and `7D3` by 14:07 — over an hour before the 15:14 off-road
-segment even started. 10.53 req/s across 85 commands was never a demand the
-app could sustain; it only ever delivers about 4.2 req/s to signalset
-traffic. The suspension and differential re-tiering above (`7D3/3B01`,
-`7D3/3B4D`, `795/1E88`, `795/1E89`) collected nothing, because those
-modules were already gone by the time the off-road segment ran. The budget
+the working-set discovery described at the top of this file. The app addressed
+every module at 09:57, right after a signalset change, then narrowed
+through 54, 58 and 19 distinct DIDs as the day went on, and was down to a
+23-command working set by the time the 15:14 off-road segment started.
+10.53 req/s across 85 commands was never a demand the app could sustain; it
+only ever delivers about 4.2 req/s to signalset traffic. The suspension and
+differential re-tiering above (`7D3/3B01`, `7D3/3B4D`, `795/1E88`,
+`795/1E89`) collected nothing, because none of those commands were in that
+working set. Worth keeping in proportion: 23 distinct DIDs is the widest
+coverage any long session has managed since 09-05, so the drive was not an
+unusually bad one. The budget
 has since been cut to 3.922 req/s across 66 commands — see the verification
 task in "Open in-vehicle tasks" above.
 
