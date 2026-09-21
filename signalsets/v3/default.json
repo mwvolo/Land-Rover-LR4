@@ -20,7 +20,12 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B01"}, "freq": 15,
   "signals": [
-    {"id": "LR4_3B01_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B01 Raw", "description": "Ride-height state word, running in parallel with the ride height mode PID. 0x100 was measured against a front sensor mean of 111.6 (Normal) and 0x800 against 133.0 (Access). 0x400 has been seen once and never alongside a height sample; Off-Road by elimination, unconfirmed."}
+    {"id": "LR4_RIDE_HEIGHT_STATE", "path": "Suspension", "name": "Ride Height State", "description": "Runs in parallel with the ride height mode PID and agrees with it. All three bits are now measured against the front height sensor: 0x100 at a front reading around 110 (Normal), 0x400 around 85 with the truck at its highest (Off-Road), 0x800 at 133 with it at its lowest (Access). Remember the sensor is inverted.", "fmt": {"len": 32, "map": {
+          "256":  { "description": "Normal",   "value": "Normal" },
+          "1024": { "description": "Off-Road", "value": "Off-Road" },
+          "2048": { "description": "Access",   "value": "Access" }
+        }}
+    }
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "DD01"}, "freq": 600,
   "signals": [
@@ -127,27 +132,27 @@
   "signals": [
     {"id": "LR4_1E89_RAW", "hidden": true, "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E89 Raw", "description": "Undecoded rear differential DID. Flat at 09C4 on every sample so far."}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 120,
   "signals": [
-    {"id": "LR4_2A32_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A32 Raw"}
+    {"id": "LR4_2A32_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A32 Raw", "description": "A counter, not a constant. Held 404720 across 19 samples taken over a single morning and was written off; nine hours and 111 km later it read 420200. 2A32 through 2A37 all advance. What they count is unknown - 2A32 gained 126 per km, 2A33 4.3, 2A34 8.6, 2A35 19.5, 2A36 0.8, 2A37 0.009 - and pinning it needs several samples within one drive, which is why these now poll at 120s."}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A33"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A33"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A33_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A33 Raw"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A34"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A34"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A34_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A34 Raw"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A35"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A35"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A35_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A35 Raw"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A36_RAW", "hidden": true, "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A36 Distance Counter"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A37"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A37"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A37_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A37 Raw"}
   ]},
@@ -179,9 +184,9 @@
   "signals": [
     {"id": "LR4_3B08_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B08 Raw", "description": "Undecoded suspension DID. Flat through a real ride-height change, but on three samples only."}
   ]},
-{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 60,
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 30,
   "signals": [
-    {"id": "LR4_3B4D_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "3B4D Raw", "description": "Previously labelled Drive Mode, which it is not: it has read 0 on every sample ever taken, including through ride-height changes. A Terrain Response change is the untried test."}
+    {"id": "LR4_3B4D_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B4D Raw", "description": "Terrain Response candidate, and back in contention. It held a constant 0x00 across 236 samples and was written off as dead; the first short drive on which the off-road features were deliberately exercised produced 0x04, 0x01 and 0x00 within eight minutes. It does not track the ride height mode PID, so it is reporting something else. Needs one sample per selectable terrain mode to map."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F458"}, "freq": 120,
   "signals": [

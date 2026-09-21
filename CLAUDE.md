@@ -159,6 +159,12 @@ These have all actually bitten:
    all taken with the differential unlocked. A probe costs 0.0017 req/s at
    `freq` 600. Deleting it costs the answer. Park it, don't cull it.
 
+   The restored probes settled this within hours. `3B4D` — the one deletion
+   called conclusive, flat `0x00` across 236 samples — returned `0x04`,
+   `0x01` and `0x00` within eight minutes of the off-road features actually
+   being used. Six of the eleven `792` `2A3x` DIDs turned out to be
+   advancing counters rather than constants.
+
 6. **Standard mode-01 PIDs are already being polled by the app, constantly,
    and a proprietary DID may duplicate one.** Before adding a signal, check
    whether the truck already answers it somewhere cheaper, and check whether
@@ -177,7 +183,11 @@ These have all actually bitten:
    14.7 x 745 / 3600, so MAF divided by it is litres per hour.
 
 8. **Only signals carrying a `suggestedMetric` are ever written to the
-   app's signal database.** Measured over fifteen months of backups: the
+   app's signal database, but every signal displays live.** Screenshots on
+   2026-09-20 confirm non-metric and `hidden: true` signals alike appear
+   with current values in the app's section lists — so `hidden` does not
+   suppress anything, and bandwidth spent on a metric-less signal still
+   buys a readout. What it does not buy is history. Measured over fifteen months of backups: the
    store has held exactly 15 distinct signals, and they are precisely the
    ones with a metric. Everything else is requested, answered, decoded and
    discarded. During a 137-minute drive on 2026-09-20 the 14 signals

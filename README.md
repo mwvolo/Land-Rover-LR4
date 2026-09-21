@@ -603,6 +603,60 @@ argument for removing them. `3B4D` stays in despite being the one genuinely
 conclusive case, because at 600s it is free and the cost of being wrong
 about it is another six weeks of not knowing.
 
+### What the restored probes did within hours
+
+The probes went back in, the change was merged, and one short evening drive
+on 2026-09-20 in which the off-road features were deliberately used settled
+three of them. The merge also did what it was predicted to: coverage on the
+next sessions jumped from 23 distinct DIDs and 10 modules to **70 DIDs and
+13 modules**, with 87 of the file's 90 commands polled. Every module that
+had drifted out — `726`, `732`, `761`, `792`, `7D3` — came back without
+anyone touching the app.
+
+**`3B4D` is alive, and it was the one deletion called conclusive.** Constant
+`0x00` across 236 samples, deleted, restored at 60s on the argument that the
+samples had never covered the event. Within eight minutes of the features
+being used it returned `0x04`, `0x01` and `0x00`. It does not track the ride
+height mode PID, so it is reporting something else, and Terrain Response is
+back to being the leading candidate. It now polls at 30s and needs one
+sample per selectable mode to map.
+
+**Six of the eleven `792` counters advance.** They were written off on 10 to
+19 samples each, all taken within one morning. Nine hours and 111 km later:
+
+| DID | Was | Now | Gain | Per km |
+|---|---|---|---|---|
+| `2A32` | 404,720 | 420,200 | +14,000 | 126 |
+| `2A33` | 212,490 | 212,970 | +480 | 4.3 |
+| `2A34` | 2,240 | 3,200 | +960 | 8.6 |
+| `2A35` | 335,400 | 337,570 | +2,170 | 19.5 |
+| `2A36` | 43,275 | 43,363 | +88 | 0.8 |
+| `2A37` | 107 | 108 | +1 | 0.01 |
+
+They are counters on a module still not identified. What they count is
+unknown — none of the per-km rates is a clean unit and the elapsed window
+mixes driving with nine hours parked. They now poll at 120s so a single
+drive yields enough samples to regress against distance and running time.
+`2A38` through `2A3C` have still never moved.
+
+**`3B01`'s last bit is pinned.** `0x400` was Off-Road by elimination and
+unconfirmed. It was caught twice at a front sensor reading of 85 to 89, the
+truck at its highest, with the mode PID reading Off-Road. `3B01` is now a
+mapped signal rather than a raw word: `0x100` Normal, `0x400` Off-Road,
+`0x800` Access.
+
+**The ride height map checks out end to end.** A screenshot at 20:19 shows
+Ride Height Mode reading **Access** and the rear sensor at 128; the scan log
+for the same moment has `3B3C` at `0x04`, `3B01` at `0x800` and the rear
+sensor at 128. Access had never once displayed before the map was corrected.
+
+**All six new probes answered.** PID 01 reports the MIL off with zero stored
+DTCs. PID 13 returns `0x77`, six oxygen sensors, three per bank. PID 51 is
+gasoline, PID 1C is OBD-II. PID 23 ranges from 29 to 197 bar across the
+logs, against the proprietary `033E` reading 41 to 46 bar over the same
+evening — both are live and they disagree, which is the comparison worth
+making under load.
+
 The standard this file now holds deletions to: a DID needs enough samples
 to have covered the event it would report, not merely a lot of samples.
 Hundreds of readings taken while the differential was never locked say
@@ -1061,12 +1115,13 @@ recorded as history. It includes the charge cooler coolant temperature newly
 decoded from PID 67 sensor 2 — a real signal, genuinely new, that will never
 persist.
 
-One limit on the claim: what was measured is that these signals are never
-*stored*. Whether the app renders them live is a separate question the logs
-cannot answer. This repo has always assumed that an `F4xx`-aliased signal
-does show up live in the app, and nothing here contradicts that; it is still
-an assumption, and it is one the owner can confirm from the app in a few
-seconds.
+One limit on the claim, now resolved: what was measured is that these
+signals are never *stored*. Whether the app renders them live was a separate
+question the logs could not answer, and screenshots on 2026-09-20 settled it
+— **non-metric signals do display live**, with current values, in the app's
+section lists. Manifold pressure, charge air temperature, the suspension
+pressures and every raw probe are all on screen. So the bandwidth spent on
+them buys a real readout; what it does not buy is history.
 
 The practical rule: a fast `freq` on a signal with no metric buys a live
 readout and nothing else. That can be worth paying for. It should be a
@@ -1099,11 +1154,18 @@ Jaguar signalset does and what has never been tried here.
 ### Hidden signals
 
 Eleven of the file's 84 signals (including synthetics) carry `hidden: true`:
-the remaining `*_RAW` probes and the `3B02` byte splits. Hiding keeps them
-from cluttering the app with values nobody can interpret yet. Note that none
-of them is recorded either way — none carries a metric, so `hidden` changes
-only what is shown, never what is kept. A probe earns its way out of hiding
-by being decoded and named.
+the remaining `*_RAW` probes and the `3B02` byte splits.
+
+**`hidden: true` does not appear to do anything in this app.** Screenshots
+taken on 2026-09-20 show `3B00 Raw`, `3B01 Raw`, `3B02 Byte 1`, `3B4D Raw`,
+`3B08 Raw`, `2A32 Raw`, `2A3A Raw`, `197C Raw`, `726 0202 Raw`, `D11C Raw`,
+`Monitor Status Raw`, `O2 Sensors Present Raw`, `OBD Standard Raw` and
+`Fuel Type Raw` all listed with values in the Suspension, Fuel and ECU
+sections. Every one of those carries `hidden: true` in this file. Whatever
+the flag is for, it is not suppressing them from the section lists, so it
+should not be relied on to keep clutter down. It also does not affect
+recording: none of these carries a metric, so none was ever stored either
+way.
 
 Eighteen signals carry a `description`, concentrated on the probes and on
 the decoded signals with a catch — the inverted height sensors, the bank 2
