@@ -97,13 +97,13 @@ VIN bytes instead of a rejection — worth a retry.
 | Mass Air Flow | `7E0` `22F410` | Grams of air per second |
 | Equivalence Ratio | `7E0` `22F444` | Commanded lambda |
 | O2 Lambda B1S1 | `7E0` `22F434` | Measured lambda |
-| O2 Sensor Voltage | `7E0` `22F434` | Second half of the same response |
+| O2 Pump Current B1S1 | `7E0` `22F434` | Second half of the same response. Current, not voltage — see "Two decodes that were wrong" |
 | Catalyst Temp B1S1 / B2S1 | `7E0` `22F43C` / `22F43D` | One per bank |
 | Oil Temp | `7E0` `2203F3` | Land Rover's own sensor. The SAE alias `F45C` was dropped — 1,169 samples against this one's 347,015 |
 | Oil Level | `7E0` `2203E6` | Millimetres in the sump |
 | Oil Volume | `7E0` `2203F2` | |
 | O2 Lambda B2S1 | `7E0` `22F438` | Measured lambda, bank 2 — first bank 2 lambda ever read on this truck |
-| O2 Sensor Voltage B2S1 | `7E0` `22F438` | Second half of the same response |
+| O2 Pump Current B2S1 | `7E0` `22F438` | Second half of the same response. Current, not voltage |
 | O2 Voltage B1S2 | `7E0` `22F415` | Post-catalyst sensor, bank 1 |
 | Relative Throttle Position | `7E0` `22F445` | A third throttle-position reading, alongside Throttle Position and Commanded Throttle |
 | Absolute Throttle Position B | `7E0` `22F447` | A fourth |
@@ -203,7 +203,7 @@ All four corners report gauge pressure in the air spring.
 | Compressor Activity | `7D3` `223B07` | ~110 at rest, over 1,300 while the truck raises |
 | Ride Height Mode | `7D3` `223B3C` | Enum: 1 Normal, 2 Off-Road, 4 Access, 13 In Transit. Corrected 2026-09-20 — see "Air suspension notes" under Off-road |
 | Height Sensor Front / Rear | `7D3` `223B71` / `223B72` | **Inverted** — falls as the truck rises |
-| Module Voltage | `7D3` `22D11A` | Should mirror battery voltage |
+| `D11A` Raw | `7D3` `22D11A` | Was called Module Voltage; it is not battery voltage — see "Two decodes that were wrong" |
 
 Normal standing pressures are roughly 40 psi per corner at normal ride
 height, rising with load and with raised height modes.
@@ -602,6 +602,109 @@ the event-driven candidates (`1E88`, `1E89`, `3B4D`) at 60s, `3B00` and
 argument for removing them. `3B4D` stays in despite being the one genuinely
 conclusive case, because at 600s it is free and the cost of being wrong
 about it is another six weeks of not knowing.
+
+### What the restored probes did within hours
+
+The probes went back in, the change was merged, and one short evening drive
+on 2026-09-20 in which the off-road features were deliberately used settled
+three of them. The merge also did what it was predicted to: coverage on the
+next sessions jumped from 23 distinct DIDs and 10 modules to **70 DIDs and
+13 modules**, with 87 of the file's 90 commands polled. Every module that
+had drifted out — `726`, `732`, `761`, `792`, `7D3` — came back without
+anyone touching the app.
+
+**`3B4D` is alive, and it was the one deletion called conclusive.** Constant
+`0x00` across 236 samples, deleted, restored at 60s on the argument that the
+samples had never covered the event. Within eight minutes of the features
+being used it returned `0x04`, `0x01` and `0x00`. It does not track the ride
+height mode PID, so it is reporting something else, and Terrain Response is
+back to being the leading candidate. It now polls at 30s and needs one
+sample per selectable mode to map.
+
+**Six of the eleven `792` counters advance.** They were written off on 10 to
+19 samples each, all taken within one morning. Nine hours and 111 km later:
+
+| DID | Was | Now | Gain | Per km |
+|---|---|---|---|---|
+| `2A32` | 404,720 | 420,200 | +14,000 | 126 |
+| `2A33` | 212,490 | 212,970 | +480 | 4.3 |
+| `2A34` | 2,240 | 3,200 | +960 | 8.6 |
+| `2A35` | 335,400 | 337,570 | +2,170 | 19.5 |
+| `2A36` | 43,275 | 43,363 | +88 | 0.8 |
+| `2A37` | 107 | 108 | +1 | 0.01 |
+
+They are counters on a module still not identified. What they count is
+unknown — none of the per-km rates is a clean unit and the elapsed window
+mixes driving with nine hours parked. They now poll at 120s so a single
+drive yields enough samples to regress against distance and running time.
+`2A38` through `2A3C` have still never moved.
+
+**`3B01`'s last bit is pinned.** `0x400` was Off-Road by elimination and
+unconfirmed. It was caught twice at a front sensor reading of 85 to 89, the
+truck at its highest, with the mode PID reading Off-Road. `3B01` is now a
+mapped signal rather than a raw word: `0x100` Normal, `0x400` Off-Road,
+`0x800` Access.
+
+**Two decodes in this file were wrong, and the short drive exposed both.**
+
+The second word of `F434` and `F438` was being read as a voltage. SAE J1979
+PIDs 34 to 3B report equivalence ratio plus sensor *current*; the voltage
+variants are PIDs 24 to 2B, which this ECM does not support. Read as a
+voltage it produced a flat 4.0 across 28,432 samples, which should have been
+the giveaway. Read correctly it spans -0.95 to +1.36 mA around a mean of
++0.16, exactly what a wideband pump cell does. Both are now
+`O2 Pump Current`, in milliamps.
+
+`D11A` was called Suspension Module Voltage and scaled to volts. It is not
+battery voltage. Across 221 paired samples its raw value swings 57 to 105,
+an 84% range, while control module voltage moved only 12.51 to 14.75, an 18%
+range, and the implied volts-per-count scatters by 9%. The old scaling put
+it at 16.8 V, which no 12 V system reaches. The best correlation found for
+it is 0.58 against compressor activity, which is not enough to name
+anything, so it goes back to being an undecoded raw byte.
+
+**The two fuel rail pressures are not the same measurement.** `033E` and
+PID 23 were expected to be one quantity scaled two ways. Across 157 paired
+samples the ratio between them drifts from 0.41 to 0.56 instead of holding
+constant, and in one stretch PID 23 sat pinned near 197 bar while `033E`
+climbed from 79 to 110. A scaling error gives a fixed ratio; this does not.
+Two different quantities, plausibly a commanded rail target against a
+measured one, and separating them needs hard sampling under load.
+
+**There is one ride-height state nobody has logged.** Holding the lower
+button puts the truck into a held-Access mode that stays down rather than
+self-levelling, and it appears in none of the 484 `3B3C` or 142 `3B01`
+samples. Both words have exactly one unfilled slot: `3B01` bit 9 (`0x200`),
+sitting between Normal at `0x100`, Off-Road at `0x400` and Access at
+`0x800`; and `3B3C` bit 3 (`0x08`), which has only ever been seen inside
+`0x0D` with the truck in motion between heights. One of them is the likely
+home for it.
+
+Because a mapped signal renders nothing for a value it has not been taught,
+both DIDs now carry an untranslated twin — `Ride Height State Raw` and
+`Ride Height Mode Raw`. They cost no extra request and they mean an
+unrecognised state arrives as a number instead of a blank. `3B4D` showing
+empty in the app is exactly that failure mode, and it is why the value went
+unnoticed for so long.
+
+Two more suspension DIDs turn out not to be flat either. `3B00` reads
+`0x03` in 111 of 113 samples with one `0x103`, taken with the truck at
+Access; `3B02` carries a bit-8 flag that toggles the same way; and `3B08`
+reads `0x00` in 130 of 131 with a single `0x01`, taken with Off-Road
+engaged and the truck at its highest. One sample each is not a decode, but
+none of the three is dead.
+
+**The ride height map checks out end to end.** A screenshot at 20:19 shows
+Ride Height Mode reading **Access** and the rear sensor at 128; the scan log
+for the same moment has `3B3C` at `0x04`, `3B01` at `0x800` and the rear
+sensor at 128. Access had never once displayed before the map was corrected.
+
+**All six new probes answered.** PID 01 reports the MIL off with zero stored
+DTCs. PID 13 returns `0x77`, six oxygen sensors, three per bank. PID 51 is
+gasoline, PID 1C is OBD-II. PID 23 ranges from 29 to 197 bar across the
+logs, against the proprietary `033E` reading 41 to 46 bar over the same
+evening — both are live and they disagree, which is the comparison worth
+making under load.
 
 The standard this file now holds deletions to: a DID needs enough samples
 to have covered the event it would report, not merely a lot of samples.
@@ -1061,12 +1164,13 @@ recorded as history. It includes the charge cooler coolant temperature newly
 decoded from PID 67 sensor 2 — a real signal, genuinely new, that will never
 persist.
 
-One limit on the claim: what was measured is that these signals are never
-*stored*. Whether the app renders them live is a separate question the logs
-cannot answer. This repo has always assumed that an `F4xx`-aliased signal
-does show up live in the app, and nothing here contradicts that; it is still
-an assumption, and it is one the owner can confirm from the app in a few
-seconds.
+One limit on the claim, now resolved: what was measured is that these
+signals are never *stored*. Whether the app renders them live was a separate
+question the logs could not answer, and screenshots on 2026-09-20 settled it
+— **non-metric signals do display live**, with current values, in the app's
+section lists. Manifold pressure, charge air temperature, the suspension
+pressures and every raw probe are all on screen. So the bandwidth spent on
+them buys a real readout; what it does not buy is history.
 
 The practical rule: a fast `freq` on a signal with no metric buys a live
 readout and nothing else. That can be worth paying for. It should be a
@@ -1099,11 +1203,18 @@ Jaguar signalset does and what has never been tried here.
 ### Hidden signals
 
 Eleven of the file's 84 signals (including synthetics) carry `hidden: true`:
-the remaining `*_RAW` probes and the `3B02` byte splits. Hiding keeps them
-from cluttering the app with values nobody can interpret yet. Note that none
-of them is recorded either way — none carries a metric, so `hidden` changes
-only what is shown, never what is kept. A probe earns its way out of hiding
-by being decoded and named.
+the remaining `*_RAW` probes and the `3B02` byte splits.
+
+**`hidden: true` does not appear to do anything in this app.** Screenshots
+taken on 2026-09-20 show `3B00 Raw`, `3B01 Raw`, `3B02 Byte 1`, `3B4D Raw`,
+`3B08 Raw`, `2A32 Raw`, `2A3A Raw`, `197C Raw`, `726 0202 Raw`, `D11C Raw`,
+`Monitor Status Raw`, `O2 Sensors Present Raw`, `OBD Standard Raw` and
+`Fuel Type Raw` all listed with values in the Suspension, Fuel and ECU
+sections. Every one of those carries `hidden: true` in this file. Whatever
+the flag is for, it is not suppressing them from the section lists, so it
+should not be relied on to keep clutter down. It also does not affect
+recording: none of these carries a metric, so none was ever stored either
+way.
 
 Eighteen signals carry a `description`, concentrated on the probes and on
 the decoded signals with a catch — the inverted height sensors, the bank 2

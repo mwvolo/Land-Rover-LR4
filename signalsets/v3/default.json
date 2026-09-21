@@ -20,7 +20,13 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B01"}, "freq": 15,
   "signals": [
-    {"id": "LR4_3B01_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B01 Raw", "description": "Ride-height state word, running in parallel with the ride height mode PID. 0x100 was measured against a front sensor mean of 111.6 (Normal) and 0x800 against 133.0 (Access). 0x400 has been seen once and never alongside a height sample; Off-Road by elimination, unconfirmed."}
+    {"id": "LR4_RIDE_HEIGHT_STATE", "path": "Suspension", "name": "Ride Height State", "description": "Runs in parallel with the ride height mode PID and agrees with it. All three observed bits are measured against the front height sensor: 0x100 at a front reading around 110 (Normal), 0x400 around 85 with the truck at its highest (Off-Road), 0x800 at 133 with it at its lowest (Access). Remember the sensor is inverted. Bit 9 (0x200) sits between Normal and Off-Road and has never been seen in 142 samples; the held-Access mode, where the lower button is held and the truck stays down, is the obvious candidate and has never been captured.", "fmt": {"len": 32, "map": {
+          "256":  { "description": "Normal",   "value": "Normal" },
+          "1024": { "description": "Off-Road", "value": "Off-Road" },
+          "2048": { "description": "Access",   "value": "Access" }
+        }}
+    },
+    {"id": "LR4_RIDE_HEIGHT_STATE_RAW", "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "Ride Height State Raw", "description": "Untranslated twin of Ride Height State. A mapped signal renders nothing for a value it has not been taught, so an unmapped state would be invisible in the app and only recoverable from the scan logs. This costs no extra request and makes a new state show up as a number."}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "DD01"}, "freq": 600,
   "signals": [
@@ -67,13 +73,14 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B3C"}, "freq": 10,
   "signals": [
-    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "name": "Ride Height Mode", "fmt": {"len": 8, "map": {
+    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "name": "Ride Height Mode", "description": "A bitfield, not an ordinal: bit 0 Normal, bit 1 Off-Road, bit 2 Access. 0x0D is 0x01|0x04|0x08 and has only been seen with the truck part-way between Normal and Access, so bit 3 reads as movement rather than a mode of its own. Bit 3 has never been seen set on its own, which is where a held-Access mode would most likely appear.", "fmt": {"len": 8, "map": {
           "1":  { "description": "Normal",     "value": "Normal" },
           "2":  { "description": "Off-Road",   "value": "Off-Road" },
           "4":  { "description": "Access",     "value": "Access" },
           "13": { "description": "In Transit", "value": "In Transit" }
         }}
-    }
+    },
+    {"id": "LR4_RIDE_HEIGHT_RAW", "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Ride Height Mode Raw", "description": "Untranslated twin of Ride Height Mode, for the same reason as the state word: an unmapped value renders as a blank, and a blank teaches nothing."}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B71"}, "freq": 15,
   "signals": [
@@ -85,7 +92,7 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "D11A"}, "freq": 60,
   "signals": [
-    {"id": "LR4_SUSPENSION_SUPPLY_V", "path": "Suspension", "fmt": { "len": 8, "max": 40.8, "mul": 16, "div": 100, "unit": "volts" }, "name": "Suspension Module Voltage"}
+    {"id": "LR4_D11A_RAW", "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "D11A Raw", "description": "Was called Suspension Module Voltage and scaled to volts. It is not battery voltage: across 221 paired samples its raw range spans 57 to 105, an 84% swing, while control module voltage moved only 12.51 to 14.75, an 18% swing, and the implied scale scatters by 9%. The old scaling also put it at 16.8 V, which no 12 V system reaches. Best correlation found so far is 0.58 against compressor activity, which is not enough to name it. Undecoded until something fits."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "033E"}, "freq": 10,
   "signals": [
@@ -127,27 +134,27 @@
   "signals": [
     {"id": "LR4_1E89_RAW", "hidden": true, "path": "Drivetrain", "fmt": { "len": 16, "max": 65535, "unit": "scalar" }, "name": "1E89 Raw", "description": "Undecoded rear differential DID. Flat at 09C4 on every sample so far."}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A32"}, "freq": 120,
   "signals": [
-    {"id": "LR4_2A32_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A32 Raw"}
+    {"id": "LR4_2A32_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A32 Raw", "description": "A counter, not a constant. Held 404720 across 19 samples taken over a single morning and was written off; nine hours and 111 km later it read 420200. 2A32 through 2A37 all advance. What they count is unknown - 2A32 gained 126 per km, 2A33 4.3, 2A34 8.6, 2A35 19.5, 2A36 0.8, 2A37 0.009 - and pinning it needs several samples within one drive, which is why these now poll at 120s."}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A33"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A33"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A33_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A33 Raw"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A34"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A34"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A34_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A34 Raw"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A35"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A35"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A35_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "2A35 Raw"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A36"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A36_RAW", "hidden": true, "path": "Tires", "fmt": { "len": 24, "max": 16777215, "nullmin": 0, "unit": "scalar" }, "name": "2A36 Distance Counter"}
   ]},
-{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A37"}, "freq": 600,
+{ "hdr": "792", "rax": "79A", "cmd": {"22": "2A37"}, "freq": 120,
   "signals": [
     {"id": "LR4_2A37_RAW", "hidden": true, "path": "ECU", "fmt": { "len": 24, "max": 16777215, "unit": "scalar" }, "name": "2A37 Raw"}
   ]},
@@ -173,15 +180,15 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B00"}, "freq": 120,
   "signals": [
-    {"id": "LR4_3B00_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B00 Raw", "description": "Undecoded suspension DID. Flat through a real ride-height change, but on three samples only."}
+    {"id": "LR4_3B00_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B00 Raw", "description": "Undecoded. Reads 0x03 in 111 of 113 samples; the exception is 0x103, once, with the truck sitting at Access. Bit 8 looks like a height-event flag, and 3B02 carries a bit-8 flag that behaves the same way."}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B08"}, "freq": 120,
   "signals": [
-    {"id": "LR4_3B08_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B08 Raw", "description": "Undecoded suspension DID. Flat through a real ride-height change, but on three samples only."}
+    {"id": "LR4_3B08_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B08 Raw", "description": "Undecoded. Reads 0x00 in 130 of 131 samples; the exception is 0x01, once, with Off-Road engaged and the truck at its highest. One sample is not a decode, but it is not dead either."}
   ]},
-{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 60,
+{ "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 30,
   "signals": [
-    {"id": "LR4_3B4D_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "nullmin": 0, "unit": "scalar" }, "name": "3B4D Raw", "description": "Previously labelled Drive Mode, which it is not: it has read 0 on every sample ever taken, including through ride-height changes. A Terrain Response change is the untried test."}
+    {"id": "LR4_3B4D_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B4D Raw", "description": "Terrain Response candidate, and back in contention. It held a constant 0x00 across 236 samples and was written off as dead; the first short drive on which the off-road features were deliberately exercised produced 0x04, 0x01 and 0x00 within eight minutes. It does not track the ride height mode PID, so it is reporting something else. Needs one sample per selectable terrain mode to map."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F458"}, "freq": 120,
   "signals": [
@@ -189,7 +196,7 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F423"}, "freq": 60,
   "signals": [
-    {"id": "LR4_FUEL_RAIL_GAUGE_P", "path": "Fuel", "fmt": { "len": 16, "max": 655350, "mul": 10, "unit": "kilopascal" }, "name": "Fuel Rail Gauge Pressure", "description": "SAE J1979 PID 23. Answers: 158 logged samples ranging 0x015F to 0x07B6, which scales to 35 to 197 bar and is the right shape for this engine's direct injection rail. Compare against the proprietary rail pressure DID 033E, which reads far lower on the same engine; one of the two is scaled wrong and this one matches the hardware."}
+    {"id": "LR4_FUEL_RAIL_GAUGE_P", "path": "Fuel", "fmt": { "len": 16, "max": 655350, "mul": 10, "unit": "kilopascal" }, "name": "Fuel Rail Gauge Pressure", "description": "SAE J1979 PID 23, ranging 29 to 197 bar, the right shape for this engine's direct injection rail. It is not the same measurement as the proprietary DID 033E: across 157 paired samples the ratio between them drifts from 0.41 to 0.56 rather than holding constant, and in one stretch this PID sat pinned near 197 bar while 033E climbed from 79 to 110 bar. A fixed scaling error would give a fixed ratio, so these are two different quantities - plausibly a commanded rail target against a measured one. Worth sampling hard under load to separate them."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F401"}, "freq": 600,
   "signals": [
@@ -219,7 +226,7 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F438"}, "freq": 60,
   "signals": [
     {"id": "LR4_O2_LAMBDA_B2", "path": "Engine", "fmt": { "len": 16, "max": 1.999, "div": 32768, "unit": "scalar" }, "name": "O2 Lambda B2S1", "description": "Bank 2 sensor 1. Rails at FFFF on roughly half of samples; treat those as invalid rather than lean."},
-    {"id": "LR4_O2_VOLTAGE_B2", "path": "Engine", "fmt": { "bix": 16, "len": 16, "max": 7.999, "div": 8192, "unit": "volts" }, "name": "O2 Voltage B2S1"}
+    {"id": "LR4_O2_CURRENT_B2", "path": "Engine", "fmt": { "bix": 16, "len": 16, "max": 128, "min": -128, "div": 256, "add": -128, "unit": "milliamps" }, "name": "O2 Pump Current B2S1", "description": "Bank 2 counterpart. See O2 Pump Current B1S1 - PID 38 reports current, not voltage."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F42E"}, "freq": 120,
   "signals": [
@@ -325,7 +332,7 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F430"}, "freq": 600,
   "signals": [
-    {"id": "LR4_WARMUPS", "path": "Trips", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Warm-ups Since Codes Cleared"}
+    {"id": "LR4_WARMUPS", "path": "Trips", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Warm-ups Since Codes Cleared", "description": "Saturated. The PID is a single byte and has been pinned at 255 for as long as it has been logged, so it says only that codes were cleared more than 255 warm-up cycles ago."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F431"}, "freq": 300,
   "signals": [
@@ -392,7 +399,7 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F434"}, "freq": 10,
   "signals": [
     {"id": "LR4_O2_LAMBDA",  "path": "Engine", "fmt": {           "len": 16, "max": 2,     "div": 32768, "nullmin": 0, "unit": "scalar" }, "name": "O2 Lambda B1S1",    "suggestedMetric": "o2Lambda"},
-    {"id": "LR4_O2_VOLTAGE", "path": "Engine", "fmt": {"bix": 16, "len": 16, "max": 7.999, "div": 8192,                "unit": "volts"  }, "name": "O2 Sensor Voltage"}
+    {"id": "LR4_O2_CURRENT", "path": "Engine", "fmt": {"bix": 16, "len": 16, "max": 128, "min": -128, "div": 256, "add": -128, "unit": "milliamps"  }, "name": "O2 Pump Current B1S1", "description": "The second word of SAE J1979 PID 34 is sensor current, not voltage; the voltage variants are PIDs 24 to 2B, which this ECM does not support. Read as voltage it sat at a meaningless flat 4.0 across 28,432 samples. Read as current it spans -0.95 to +1.36 mA with a mean of +0.16, which is what a wideband pump cell should do."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F43C"}, "freq": 60,
   "signals": [
