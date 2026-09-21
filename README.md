@@ -154,7 +154,9 @@ turned out to be genuinely separate sensors and were kept.
 Charge Cooler Coolant Temp: it ran 11.7°C above ambient and 24°C below
 charge air temperature over those same samples, which is where the AJ126's
 separate low-temperature intercooler circuit belongs. A genuinely new
-signal, not a rename in name only.
+signal, not a rename in name only — but it carries no `suggestedMetric`,
+so it will never be stored as history by the app; see "Only signals with a
+metric are ever recorded" under Polling.
 
 **PID 70 channel A is manifold pressure, at finer resolution — not a
 separate boost sensor.** This corrects "F470 was boost pressure all along,"
@@ -207,11 +209,11 @@ Normal standing pressures are roughly 40 psi per corner at normal ride
 height, rising with load and with raised height modes.
 
 **None of this module's signals carry a `suggestedMetric`, and the app
-only ever stores signals that do** — see "The app only ever stores signals
-that carry a `suggestedMetric`" under Polling. Corner pressures, ride
-height, compressor activity and module voltage are all live-only: even
-once `7D3` is un-retired and answering again, nothing from this table will
-ever show up in the app's own history, only in the raw scan logs.
+only ever stores signals that do** — see "Only signals with a metric are
+ever recorded" under Polling. Corner pressures, ride height, compressor
+activity and module voltage are all live-only: even once `7D3` is
+un-retired and answering again, nothing from this table will ever show up
+in the app's own history, only in the raw scan logs.
 
 ---
 
@@ -496,6 +498,12 @@ recovered from earlier sessions already present in the same log file, not
 from this drive. Until the app's learned vehicle profile is reset, no
 suspension or gear-selector data will be collected on a drive no matter
 what this signalset asks for.
+
+And even once it is reset: none of the suspension signals carry a
+`suggestedMetric`, so none of them will ever be recorded as *history* by
+the app regardless — see "Only signals with a metric are ever recorded"
+under Polling. Un-retiring `7D3` restores live readouts and raw scan-log
+coverage, not a trip history for ride height or corner pressure.
 
 ### Air suspension
 
