@@ -645,6 +645,29 @@ truck at its highest, with the mode PID reading Off-Road. `3B01` is now a
 mapped signal rather than a raw word: `0x100` Normal, `0x400` Off-Road,
 `0x800` Access.
 
+**There is one ride-height state nobody has logged.** Holding the lower
+button puts the truck into a held-Access mode that stays down rather than
+self-levelling, and it appears in none of the 484 `3B3C` or 142 `3B01`
+samples. Both words have exactly one unfilled slot: `3B01` bit 9 (`0x200`),
+sitting between Normal at `0x100`, Off-Road at `0x400` and Access at
+`0x800`; and `3B3C` bit 3 (`0x08`), which has only ever been seen inside
+`0x0D` with the truck in motion between heights. One of them is the likely
+home for it.
+
+Because a mapped signal renders nothing for a value it has not been taught,
+both DIDs now carry an untranslated twin — `Ride Height State Raw` and
+`Ride Height Mode Raw`. They cost no extra request and they mean an
+unrecognised state arrives as a number instead of a blank. `3B4D` showing
+empty in the app is exactly that failure mode, and it is why the value went
+unnoticed for so long.
+
+Two more suspension DIDs turn out not to be flat either. `3B00` reads
+`0x03` in 111 of 113 samples with one `0x103`, taken with the truck at
+Access; `3B02` carries a bit-8 flag that toggles the same way; and `3B08`
+reads `0x00` in 130 of 131 with a single `0x01`, taken with Off-Road
+engaged and the truck at its highest. One sample each is not a decode, but
+none of the three is dead.
+
 **The ride height map checks out end to end.** A screenshot at 20:19 shows
 Ride Height Mode reading **Access** and the rear sensor at 128; the scan log
 for the same moment has `3B3C` at `0x04`, `3B01` at `0x800` and the rear

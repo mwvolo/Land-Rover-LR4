@@ -20,12 +20,13 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B01"}, "freq": 15,
   "signals": [
-    {"id": "LR4_RIDE_HEIGHT_STATE", "path": "Suspension", "name": "Ride Height State", "description": "Runs in parallel with the ride height mode PID and agrees with it. All three bits are now measured against the front height sensor: 0x100 at a front reading around 110 (Normal), 0x400 around 85 with the truck at its highest (Off-Road), 0x800 at 133 with it at its lowest (Access). Remember the sensor is inverted.", "fmt": {"len": 32, "map": {
+    {"id": "LR4_RIDE_HEIGHT_STATE", "path": "Suspension", "name": "Ride Height State", "description": "Runs in parallel with the ride height mode PID and agrees with it. All three observed bits are measured against the front height sensor: 0x100 at a front reading around 110 (Normal), 0x400 around 85 with the truck at its highest (Off-Road), 0x800 at 133 with it at its lowest (Access). Remember the sensor is inverted. Bit 9 (0x200) sits between Normal and Off-Road and has never been seen in 142 samples; the held-Access mode, where the lower button is held and the truck stays down, is the obvious candidate and has never been captured.", "fmt": {"len": 32, "map": {
           "256":  { "description": "Normal",   "value": "Normal" },
           "1024": { "description": "Off-Road", "value": "Off-Road" },
           "2048": { "description": "Access",   "value": "Access" }
         }}
-    }
+    },
+    {"id": "LR4_RIDE_HEIGHT_STATE_RAW", "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "Ride Height State Raw", "description": "Untranslated twin of Ride Height State. A mapped signal renders nothing for a value it has not been taught, so an unmapped state would be invisible in the app and only recoverable from the scan logs. This costs no extra request and makes a new state show up as a number."}
   ]},
 { "hdr": "7E1", "rax": "7E9", "cmd": {"22": "DD01"}, "freq": 600,
   "signals": [
@@ -72,13 +73,14 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B3C"}, "freq": 10,
   "signals": [
-    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "name": "Ride Height Mode", "fmt": {"len": 8, "map": {
+    {"id": "LR4_RIDE_HEIGHT", "path": "Suspension", "name": "Ride Height Mode", "description": "A bitfield, not an ordinal: bit 0 Normal, bit 1 Off-Road, bit 2 Access. 0x0D is 0x01|0x04|0x08 and has only been seen with the truck part-way between Normal and Access, so bit 3 reads as movement rather than a mode of its own. Bit 3 has never been seen set on its own, which is where a held-Access mode would most likely appear.", "fmt": {"len": 8, "map": {
           "1":  { "description": "Normal",     "value": "Normal" },
           "2":  { "description": "Off-Road",   "value": "Off-Road" },
           "4":  { "description": "Access",     "value": "Access" },
           "13": { "description": "In Transit", "value": "In Transit" }
         }}
-    }
+    },
+    {"id": "LR4_RIDE_HEIGHT_RAW", "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Ride Height Mode Raw", "description": "Untranslated twin of Ride Height Mode, for the same reason as the state word: an unmapped value renders as a blank, and a blank teaches nothing."}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B71"}, "freq": 15,
   "signals": [
@@ -178,11 +180,11 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B00"}, "freq": 120,
   "signals": [
-    {"id": "LR4_3B00_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B00 Raw", "description": "Undecoded suspension DID. Flat through a real ride-height change, but on three samples only."}
+    {"id": "LR4_3B00_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 32, "max": 4294967295, "unit": "scalar" }, "name": "3B00 Raw", "description": "Undecoded. Reads 0x03 in 111 of 113 samples; the exception is 0x103, once, with the truck sitting at Access. Bit 8 looks like a height-event flag, and 3B02 carries a bit-8 flag that behaves the same way."}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B08"}, "freq": 120,
   "signals": [
-    {"id": "LR4_3B08_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B08 Raw", "description": "Undecoded suspension DID. Flat through a real ride-height change, but on three samples only."}
+    {"id": "LR4_3B08_RAW", "hidden": true, "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "3B08 Raw", "description": "Undecoded. Reads 0x00 in 130 of 131 samples; the exception is 0x01, once, with Off-Road engaged and the truck at its highest. One sample is not a decode, but it is not dead either."}
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "3B4D"}, "freq": 30,
   "signals": [
