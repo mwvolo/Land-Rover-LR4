@@ -97,13 +97,13 @@ VIN bytes instead of a rejection — worth a retry.
 | Mass Air Flow | `7E0` `22F410` | Grams of air per second |
 | Equivalence Ratio | `7E0` `22F444` | Commanded lambda |
 | O2 Lambda B1S1 | `7E0` `22F434` | Measured lambda |
-| O2 Sensor Voltage | `7E0` `22F434` | Second half of the same response |
+| O2 Pump Current B1S1 | `7E0` `22F434` | Second half of the same response. Current, not voltage — see "Two decodes that were wrong" |
 | Catalyst Temp B1S1 / B2S1 | `7E0` `22F43C` / `22F43D` | One per bank |
 | Oil Temp | `7E0` `2203F3` | Land Rover's own sensor. The SAE alias `F45C` was dropped — 1,169 samples against this one's 347,015 |
 | Oil Level | `7E0` `2203E6` | Millimetres in the sump |
 | Oil Volume | `7E0` `2203F2` | |
 | O2 Lambda B2S1 | `7E0` `22F438` | Measured lambda, bank 2 — first bank 2 lambda ever read on this truck |
-| O2 Sensor Voltage B2S1 | `7E0` `22F438` | Second half of the same response |
+| O2 Pump Current B2S1 | `7E0` `22F438` | Second half of the same response. Current, not voltage |
 | O2 Voltage B1S2 | `7E0` `22F415` | Post-catalyst sensor, bank 1 |
 | Relative Throttle Position | `7E0` `22F445` | A third throttle-position reading, alongside Throttle Position and Commanded Throttle |
 | Absolute Throttle Position B | `7E0` `22F447` | A fourth |
@@ -203,7 +203,7 @@ All four corners report gauge pressure in the air spring.
 | Compressor Activity | `7D3` `223B07` | ~110 at rest, over 1,300 while the truck raises |
 | Ride Height Mode | `7D3` `223B3C` | Enum: 1 Normal, 2 Off-Road, 4 Access, 13 In Transit. Corrected 2026-09-20 — see "Air suspension notes" under Off-road |
 | Height Sensor Front / Rear | `7D3` `223B71` / `223B72` | **Inverted** — falls as the truck rises |
-| Module Voltage | `7D3` `22D11A` | Should mirror battery voltage |
+| `D11A` Raw | `7D3` `22D11A` | Was called Module Voltage; it is not battery voltage — see "Two decodes that were wrong" |
 
 Normal standing pressures are roughly 40 psi per corner at normal ride
 height, rising with load and with raised height modes.
@@ -644,6 +644,32 @@ unconfirmed. It was caught twice at a front sensor reading of 85 to 89, the
 truck at its highest, with the mode PID reading Off-Road. `3B01` is now a
 mapped signal rather than a raw word: `0x100` Normal, `0x400` Off-Road,
 `0x800` Access.
+
+**Two decodes in this file were wrong, and the short drive exposed both.**
+
+The second word of `F434` and `F438` was being read as a voltage. SAE J1979
+PIDs 34 to 3B report equivalence ratio plus sensor *current*; the voltage
+variants are PIDs 24 to 2B, which this ECM does not support. Read as a
+voltage it produced a flat 4.0 across 28,432 samples, which should have been
+the giveaway. Read correctly it spans -0.95 to +1.36 mA around a mean of
++0.16, exactly what a wideband pump cell does. Both are now
+`O2 Pump Current`, in milliamps.
+
+`D11A` was called Suspension Module Voltage and scaled to volts. It is not
+battery voltage. Across 221 paired samples its raw value swings 57 to 105,
+an 84% range, while control module voltage moved only 12.51 to 14.75, an 18%
+range, and the implied volts-per-count scatters by 9%. The old scaling put
+it at 16.8 V, which no 12 V system reaches. The best correlation found for
+it is 0.58 against compressor activity, which is not enough to name
+anything, so it goes back to being an undecoded raw byte.
+
+**The two fuel rail pressures are not the same measurement.** `033E` and
+PID 23 were expected to be one quantity scaled two ways. Across 157 paired
+samples the ratio between them drifts from 0.41 to 0.56 instead of holding
+constant, and in one stretch PID 23 sat pinned near 197 bar while `033E`
+climbed from 79 to 110. A scaling error gives a fixed ratio; this does not.
+Two different quantities, plausibly a commanded rail target against a
+measured one, and separating them needs hard sampling under load.
 
 **There is one ride-height state nobody has logged.** Holding the lower
 button puts the truck into a held-Access mode that stays down rather than

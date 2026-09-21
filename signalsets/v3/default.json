@@ -92,7 +92,7 @@
   ]},
 { "hdr": "7D3", "rax": "7DB", "cmd": {"22": "D11A"}, "freq": 60,
   "signals": [
-    {"id": "LR4_SUSPENSION_SUPPLY_V", "path": "Suspension", "fmt": { "len": 8, "max": 40.8, "mul": 16, "div": 100, "unit": "volts" }, "name": "Suspension Module Voltage"}
+    {"id": "LR4_D11A_RAW", "path": "Suspension", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "D11A Raw", "description": "Was called Suspension Module Voltage and scaled to volts. It is not battery voltage: across 221 paired samples its raw range spans 57 to 105, an 84% swing, while control module voltage moved only 12.51 to 14.75, an 18% swing, and the implied scale scatters by 9%. The old scaling also put it at 16.8 V, which no 12 V system reaches. Best correlation found so far is 0.58 against compressor activity, which is not enough to name it. Undecoded until something fits."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "033E"}, "freq": 10,
   "signals": [
@@ -196,7 +196,7 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F423"}, "freq": 60,
   "signals": [
-    {"id": "LR4_FUEL_RAIL_GAUGE_P", "path": "Fuel", "fmt": { "len": 16, "max": 655350, "mul": 10, "unit": "kilopascal" }, "name": "Fuel Rail Gauge Pressure", "description": "SAE J1979 PID 23. Answers: 158 logged samples ranging 0x015F to 0x07B6, which scales to 35 to 197 bar and is the right shape for this engine's direct injection rail. Compare against the proprietary rail pressure DID 033E, which reads far lower on the same engine; one of the two is scaled wrong and this one matches the hardware."}
+    {"id": "LR4_FUEL_RAIL_GAUGE_P", "path": "Fuel", "fmt": { "len": 16, "max": 655350, "mul": 10, "unit": "kilopascal" }, "name": "Fuel Rail Gauge Pressure", "description": "SAE J1979 PID 23, ranging 29 to 197 bar, the right shape for this engine's direct injection rail. It is not the same measurement as the proprietary DID 033E: across 157 paired samples the ratio between them drifts from 0.41 to 0.56 rather than holding constant, and in one stretch this PID sat pinned near 197 bar while 033E climbed from 79 to 110 bar. A fixed scaling error would give a fixed ratio, so these are two different quantities - plausibly a commanded rail target against a measured one. Worth sampling hard under load to separate them."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F401"}, "freq": 600,
   "signals": [
@@ -226,7 +226,7 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F438"}, "freq": 60,
   "signals": [
     {"id": "LR4_O2_LAMBDA_B2", "path": "Engine", "fmt": { "len": 16, "max": 1.999, "div": 32768, "unit": "scalar" }, "name": "O2 Lambda B2S1", "description": "Bank 2 sensor 1. Rails at FFFF on roughly half of samples; treat those as invalid rather than lean."},
-    {"id": "LR4_O2_VOLTAGE_B2", "path": "Engine", "fmt": { "bix": 16, "len": 16, "max": 7.999, "div": 8192, "unit": "volts" }, "name": "O2 Voltage B2S1"}
+    {"id": "LR4_O2_CURRENT_B2", "path": "Engine", "fmt": { "bix": 16, "len": 16, "max": 128, "min": -128, "div": 256, "add": -128, "unit": "milliamps" }, "name": "O2 Pump Current B2S1", "description": "Bank 2 counterpart. See O2 Pump Current B1S1 - PID 38 reports current, not voltage."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F42E"}, "freq": 120,
   "signals": [
@@ -332,7 +332,7 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F430"}, "freq": 600,
   "signals": [
-    {"id": "LR4_WARMUPS", "path": "Trips", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Warm-ups Since Codes Cleared"}
+    {"id": "LR4_WARMUPS", "path": "Trips", "fmt": { "len": 8, "max": 255, "unit": "scalar" }, "name": "Warm-ups Since Codes Cleared", "description": "Saturated. The PID is a single byte and has been pinned at 255 for as long as it has been logged, so it says only that codes were cleared more than 255 warm-up cycles ago."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F431"}, "freq": 300,
   "signals": [
@@ -399,7 +399,7 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F434"}, "freq": 10,
   "signals": [
     {"id": "LR4_O2_LAMBDA",  "path": "Engine", "fmt": {           "len": 16, "max": 2,     "div": 32768, "nullmin": 0, "unit": "scalar" }, "name": "O2 Lambda B1S1",    "suggestedMetric": "o2Lambda"},
-    {"id": "LR4_O2_VOLTAGE", "path": "Engine", "fmt": {"bix": 16, "len": 16, "max": 7.999, "div": 8192,                "unit": "volts"  }, "name": "O2 Sensor Voltage"}
+    {"id": "LR4_O2_CURRENT", "path": "Engine", "fmt": {"bix": 16, "len": 16, "max": 128, "min": -128, "div": 256, "add": -128, "unit": "milliamps"  }, "name": "O2 Pump Current B1S1", "description": "The second word of SAE J1979 PID 34 is sensor current, not voltage; the voltage variants are PIDs 24 to 2B, which this ECM does not support. Read as voltage it sat at a meaningless flat 4.0 across 28,432 samples. Read as current it spans -0.95 to +1.36 mA with a mean of +0.16, which is what a wideband pump cell should do."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F43C"}, "freq": 60,
   "signals": [
