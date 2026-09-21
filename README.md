@@ -142,6 +142,45 @@ fuel cut — injectors fully off while coasting, sensor reading pure air.
 
 ---
 
+## Duplicates found and removed
+
+Four signals were checked against another reading of the same physical
+quantity, using paired samples across logged history rather than a single
+drive. Two turned out to be the same measurement and were dropped; two
+turned out to be genuinely separate sensors and were kept.
+
+**PID 67 sensor 1 is the engine coolant PID.** Mean difference 0.0°C over
+135 paired samples. Deleted. Sensor 2 of the same PID is kept, renamed to
+Charge Cooler Coolant Temp: it ran 11.7°C above ambient and 24°C below
+charge air temperature over those same samples, which is where the AJ126's
+separate low-temperature intercooler circuit belongs. A genuinely new
+signal, not a rename in name only — but it carries no `suggestedMetric`,
+so it will never be stored as history by the app; see "Only signals with a
+metric are ever recorded" under Polling.
+
+**PID 70 channel A is manifold pressure, at finer resolution — not a
+separate boost sensor.** This corrects "F470 was boost pressure all along,"
+decoded earlier the same day. PID 70's support byte reads `0x02`; three of
+its four defined channels read constant zero across 525 samples and were
+dropped. The fourth, channel A, tracks Manifold Pressure to within 1.3 kPa
+mean over 525 pairs (r = 0.85) — the same manifold sensor, reported at 1/32
+kPa instead of 1 kPa, not a pre-throttle sensor. Kept, renamed to Manifold
+Pressure (Fine), slowed to 120s since the extra resolution isn't worth a
+faster poll.
+
+**The proprietary oil temperature DID and standard PID 5C agree to 0.7°C**
+over 1,135 paired samples once warm, diverging by up to 15°C during
+warm-up with PID 5C reading higher. Dropping PID 5C earlier was correct,
+and it stays out.
+
+**PID 68 sensor 2 tracks the proprietary charge air temperature DID to
+2.7°C mean** — close to redundant, but kept: sensor 1 of the same PID is
+the pre-supercharger inlet, running 9.2°C above ambient, and is a real
+second reading the truck doesn't report anywhere else. Both kept at 120s
+with descriptions.
+
+---
+
 ## Drivetrain
 
 | Signal | Address | Notes |
@@ -162,12 +201,20 @@ All four corners report gauge pressure in the air spring.
 | Pressure Rear Left / Right | `7D3` `223B06` / `223B05` |
 | Height Offset | `7D3` `222B12` | Signed, millimetres from nominal |
 | Compressor Activity | `7D3` `223B07` | ~110 at rest, over 1,300 while the truck raises |
-| Ride Height Mode | `7D3` `223B3C` | 1 normal, 2 raised — both confirmed. Two more values, `0D` and `04`, turned up during a ride-height change on 2026-09-20 and aren't explained yet |
+| Ride Height Mode | `7D3` `223B3C` | Enum: 1 Normal, 2 Off-Road, 4 Access, 13 In Transit. Corrected 2026-09-20 — see "Air suspension notes" under Off-road |
 | Height Sensor Front / Rear | `7D3` `223B71` / `223B72` | **Inverted** — falls as the truck rises |
 | Module Voltage | `7D3` `22D11A` | Should mirror battery voltage |
 
 Normal standing pressures are roughly 40 psi per corner at normal ride
 height, rising with load and with raised height modes.
+
+**None of this module's signals carry a `suggestedMetric`, and the app
+only ever stores signals that do** — see "Only signals with a metric are
+ever recorded" under Polling. Corner pressures, ride height, compressor
+activity and module voltage are all live-only: even when `7D3` is being
+polled, nothing from this table will ever show up in the app's own
+history, only in the raw scan logs. It is also why the app drifts away
+from asking `7D3` anything at all between signalset changes.
 
 ---
 
@@ -230,9 +277,12 @@ both; disagreement localises the fault.
 
 | Pair | Should agree within |
 |---|---|
-| Oil Temp vs Oil Temp (SAE) | A few degrees |
-| Fuel Rail Pressure vs SAE equivalent | Similar magnitude at steady idle |
 | Accelerator Pedal D vs E | A percent or two — they're redundant by design |
+
+Oil Temp and Fuel Rail Pressure each had an SAE alias checked against the
+proprietary signal early on (0.7°C and similar magnitude respectively);
+both aliases were dropped as duplicates and are gone from this file, so
+there's nothing left to cross-check them against day to day.
 
 Pedal D and E disagreeing is significant: the ECU compares them itself and
 will enter limp mode if they diverge.
@@ -269,9 +319,14 @@ positive trim.
 
 ## Computed signals
 
-The signalset defines eight synthetic signals. Each is a **ratio between two
-readings that should hold a known value**, which makes them suited to a
-display: you learn the normal number once, and anything else is a signal.
+The signalset defines eight synthetic signals. Seven are a **ratio between
+two readings that should hold a known value**, which makes them suited to
+a display: you learn the normal number once, and anything else is a
+signal. The eighth, Fuel Rate, is a different shape — a real physical
+quantity rather than a 1.0-normal ratio — and is described separately
+below. (An earlier eighth ratio, Rail Pressure Crosscheck, was removed
+when its SAE rail-pressure alias was dropped as a duplicate; Fuel Rate
+took its slot.)
 
 | Signal | Ratio | Normal | Meaning when it moves |
 |---|---|---|---|
@@ -280,18 +335,45 @@ display: you learn the normal number once, and anything else is a signal.
 | Bank Balance | Cat temp B1 / B2 | 1.0 | One bank working harder — misfire or injector on the low side |
 | Pedal Agreement | Pedal D / Pedal E | 1.0 | Redundant pedal sensors disagreeing; the ECU limps if they diverge |
 | Throttle Tracking | Actual / Commanded throttle | 1.0 | Plate not following orders — sticky or carbonned throttle body |
-| Rail Pressure Crosscheck | Proprietary / SAE rail pressure | steady | Drift means one sensor path is wrong |
 | Suspension Balance Front | Front left / right pressure | 1.0 | A corner losing air, before the dash warns |
 | Suspension Balance Rear | Rear left / right pressure | 1.0 | Same, rear axle |
 
-Six of the eight sit at **1.0 when healthy**, so a single glance covers
-fuelling, ignition balance, pedal and throttle integrity, and air springs.
+All seven sit at **1.0 when healthy**, so a single glance covers fuelling,
+ignition balance, pedal and throttle integrity, and air springs.
 
 Boost Pressure Ratio is the exception and the one to watch for fun: it's the
 closest thing to a boost gauge this vehicle exposes. The schema's only
 operation is division, so true gauge boost (`MAP − Barometric`) isn't
 expressible as a synthetic — but the ratio carries the same information and
 needs no altitude correction.
+
+### Fuel rate, now computed
+
+The ECM's own supported-PID bitmasks (`0100 = BFBFACD3`, `0120 = A007B119`,
+`0140 = FED08511`, `0160 = 07010000`) say PIDs `5E` and `9D` are both
+unsupported. The truck does not report fuel rate. Any app showing one is
+computing it, and now this signalset does too — the eighth synthetic,
+added 2026-09-20.
+
+```
+Litres per hour = MAF (g/s) / (Lambda × 14.7 × 745 / 3600)
+                = MAF / (Lambda × 3.0421)
+```
+
+The schema's synthetic operation is a plain ratio with no constant, so the
+constant was folded into a hidden operand instead: `LR4_FUEL_DIVISOR` reads
+Commanded Equivalence Ratio (`22F444`) with `div` set to `10771.53`
+(`32768 / 3.0421`), which yields `Lambda × 3.0421` directly. `LR4_FUEL_RATE`
+is then Mass Air Flow divided by that, already in litres per hour, and
+carries `suggestedMetric: fuelRate`.
+
+Validated against the 2026-09-20 drive: integrating the formula over 1,480
+MAF samples gives 11.21 L burned. The tank gauge fell from 87.8% to 76.9%
+over the same drive, which on the 86.3 L tank is 9.48 L — agreement to
+about 18%, on the pessimistic side, over 91.5 km (19.2 mpg by the
+formula). It's an estimate, not a measurement: the gauge is 8-bit (one step
+is 0.34 L), and float angle off-road makes it worse. Treat Fuel Rate as
+directionally useful, not a trip computer.
 
 ---
 
@@ -398,6 +480,36 @@ Engine braking sends heat somewhere different.
 
 ## Off-road
 
+### The mountain drive that tested off-roading collected no off-road data
+
+Session 2525 (2026-09-20, 15:14–17:32, 137.5 minutes, 91.5 km / 56.9 mi at
+7,800–11,000 ft) deliberately included light off-roading to exercise the
+suspension and rear differential. It produced none of that data. Every
+signal the test was aimed at lives on a module the app had already stopped
+addressing before the drive started: ride height, height sensors, corner
+pressures, compressor activity and Terrain Response all live on `7D3`,
+which the app had not addressed since 14:07 that day. The two
+rear-differential-lock candidates lived on `795`, which the app was still
+addressing, but neither DID was among the 23 commands it polled that
+session.
+
+This is not damage and it is not new. Long sessions have settled to
+between 12 and 23 commands for six weeks, and this drive's 23 was the
+widest coverage of any long session in that period — see "The app
+converges on a small working set" under Polling. The suspension module
+carries no metric-bearing command, so the app has no reason to keep asking
+it anything once the novelty of a signalset change wears off.
+
+Everything below about air suspension and the rear differential was
+recovered from earlier sessions already present in the same log file, not
+from this drive.
+
+The deeper constraint is separate and permanent: none of the suspension
+signals carry a `suggestedMetric`, so none of them will ever be recorded as
+*history* by the app — see "Only signals with a metric are ever recorded"
+under Polling. Getting `7D3` polled again restores live readouts and raw
+scan-log coverage, not a trip history for ride height or corner pressure.
+
 ### Air suspension
 
 The four corner pressures are the most useful thing you have off-road. On
@@ -422,14 +534,15 @@ you've either shifted your load or picked up a slow leak.
 | Suspension Balance | Articulation and weight transfer, live |
 | Gear Selector | Confirms what the transmission thinks it's in |
 
-A drive on 2026-09-20 that changed ride height confirmed Ride Height, Ride
-Height Front/Rear and the corner pressures all move together and in the
+A drive on 2026-09-20 that changed ride height confirmed Ride Height, the
+height sensors and the corner pressures all move together and in the
 directions their labels predict — see "Air suspension notes" below. `3B4D`,
-once labelled Drive Mode, is not: it read `0` on all 48 samples that drive,
-straight through every height change. Terrain Response mode itself is still
-untested, since the drive changed height rather than terrain setting — if a
-future drive cycles through Terrain Response settings, watch `3B4D` and note
-what it reads in each one.
+once considered for Drive Mode or Terrain Response, is neither: a later
+audit across 236 samples spanning many drives and several terrain modes
+found it constant at `0x00` throughout. It stays in the file as a 600s
+probe. Terrain
+Response itself remains unidentified on this truck — nothing currently in
+the signalset is known to carry it.
 
 ### Before you go
 
@@ -448,27 +561,67 @@ formulas eventually get worked out.
 
 | Address | Signals |
 |---|---|
-| `7E0` / `7E8` | `F416`, `F419`, `F41A`, `F458`, `F466`, `F467`, `F468`, `F470` — eight single-byte probes added 2026-09-20. The ECM's own supported-PID bitmask says these PIDs exist; nothing more is known |
-| `792` / `79A` | `2A32`–`2A3A` — eight live values, none resembling tire pressures |
-| `795` / `79D` | `1E88`, `1E89` |
-| `7E1` / `7E9` | `1E68`, `1E6A` — neighbours of the gearbox temp |
-| `761` / `769` | `197C`, `D11C` |
-| `726` / `72E` | `0202` — returns `00` |
-| `7D3` / `7DB` | `3B00`, `3B01`, `3B02`, `3B08`, `3B0B` — `3B02` answers four single-byte values that look like one per corner |
+| `7E1` / `7E9` | `1E68`, `DD01` — `1E68` is a neighbour of the gearbox temp and varies most of anything unmined on this module; `DD01` shares its DID with the engine's odometer but isn't one |
+| `761` / `769` | `197C`, `D11C` — the most active unmined DIDs on the truck, four distinct values each in four samples |
+| `7D3` / `7DB` | `3B01`, `3B02`, `3B0B` — `3B01` looks like the ride-height state word (see "Air suspension notes" under Off-road); `3B02` answers four single-byte values that look like one per corner |
 
-`726`'s `0202` came out of a sweep of DIDs `0000`–`03FF` against that module
-(916 requests) — the one hit, and the first non-identification DID ever
-found there.
+### Nineteen commands deleted, and restored
+
+These were deleted on 2026-09-20 and restored the same day, because the
+deletion was a mistake worth recording.
+The reasoning was that each was constant across its logged samples. The
+sample counts were the problem:
+
+| Command | Samples | Distinct values | Was the evidence conclusive? |
+|---|---|---|---|
+| `726` / `0202` | 13 | 1 | No |
+| `792` / `2A32`–`2A3C` (eleven) | 10–19 each | 1–3 | No |
+| `795` / `1E88` | 6 | 1 | No |
+| `795` / `1E89` | 25 | 2 | No |
+| `7E1` / `1E6A` | 29 | 1 | No |
+| `7D3` / `3B00` | 55 | 2 | Borderline |
+| `7D3` / `3B08` | 64 | 1 | Borderline |
+| `7D3` / `3B4D` | 236 | 1 | Yes |
+| `7E0` / `F458` | 1 | 1 | No, and the reading was wrong |
+
+Six samples is not evidence that a rear differential lock DID is dead; it
+is evidence that the differential was never locked while anyone was
+looking. A signal that only moves during a rare event looks constant until
+the event happens, and deleting it guarantees the event is never caught.
+
+`F458` was worse than weak — it was misread. `62F458 7F` is a *positive*
+reply carrying the data byte `0x7F`, not a `7F` negative response. PID 58
+is the long term secondary oxygen sensor trim for bank 2, the counterpart
+to PID 56 which this file already carried, and `0x7F` decodes to -0.78%.
+It is now mapped properly as `LR4_SEC_O2_TRIM_B2`.
+
+All nineteen are back, at exploratory cadences rather than their old ones:
+the event-driven candidates (`1E88`, `1E89`, `3B4D`) at 60s, `3B00` and
+`3B08` at 120s, and the rest parked at 600s. Restoring the whole set costs
+0.03 req/s against a 4.2 req/s ceiling, so the budget was never the real
+argument for removing them. `3B4D` stays in despite being the one genuinely
+conclusive case, because at 600s it is free and the cost of being wrong
+about it is another six weeks of not knowing.
+
+The standard this file now holds deletions to: a DID needs enough samples
+to have covered the event it would report, not merely a lot of samples.
+Hundreds of readings taken while the differential was never locked say
+nothing about a differential lock DID. When in doubt, park it at 600s
+instead — a probe costs 0.0017 req/s and deleting it costs the answer.
 
 **The suspension decodes check out.** Replaying every logged sample through
 the formats in this file gives corner pressures of 34-50 psi, a ride height
 offset correctly signed at -91 to +50 mm, and module voltage of 9.12-14.56 V,
-all physically sensible. The exception is `3B4D`: it was labelled Drive Mode,
-but it returned `0` on all 171 samples recorded before 2026-09-20 and on all
-48 samples taken on a 2026-09-20 drive that changed ride height twice — flat
-straight through the one state change it was tested against. The signal has
-been renamed `LR4_3B4D_RAW`. A terrain-mode change hasn't been tested yet, so
-the field is unidentified rather than proven useless.
+all physically sensible.
+
+**Terrain Response and `3B4D`.** `3B4D` was labelled Drive Mode and was the
+candidate for Terrain Response. Across all logged history it returns a
+constant `0x00` — 236 samples, spanning many drives and several terrain
+modes, not just the one 2026-09-20 drive that first flagged it as flat.
+That's not "unconfirmed," it's answered: `3B4D` is not Terrain Response and
+appears to be nothing. It is nonetheless still in the file at 600s, because
+that costs 0.0017 req/s and leaves the door open — see "Nineteen commands
+deleted, and restored" above.
 
 What the audit could not do is say anything about suspension health. Across
 fourteen months only 36 minutes have all four corner pressures captured
@@ -503,23 +656,27 @@ during those changes.
 
 The driver believed the low "access" height didn't register. It did — the
 corner pressures and height sensors both recorded a third, lower level at
-16:23:49. The state fields did not obviously distinguish it:
+16:23:49. What was wrong was the map, not the sampling, and a later audit
+across all logged history settled it.
 
-`3B3C` is the height mode and increments upward: mode 1 was normal and mode 2
-was raised, both confirmed before this drive. The map also labels 0 as Access
-and 3 as Extended on the assumption the ordering continues. On the 2026-09-20
-drive it also returned `0D` and `04`, neither of which fits that scheme, and
-none of the four values it returned cleanly picked out the access-height
-moment. Correct the 0/3 labels if they read wrong.
+**The ride height map was wrong, and that is why Access never registered.**
+`3B3C` across all logged history returns `0x01` (216 samples), `0x02` (11),
+`0x04` (5) and `0x0D` (4). The map in this file was ordinal, 0 through 3,
+with 0 labelled Access — but the value 0 never once occurs, and `0x04` and
+`0x0D` weren't in the map at all. Pinned against the front height sensor,
+which is inverted so a falling value means the truck is rising:
 
-`3B01` returned three distinct values on the same drive — `00000400`,
-`00000100`, `00000800` — each a single bit set, which looks like a ride-height
-state word rather than an enum. It was at `freq` 600 and caught only 3
-samples that drive, so it's been raised to `freq` 10 for another look.
+| Value | Front height sensor mean | State |
+|---|---|---|
+| `0x01` | 111.4 (range 91–122) | Normal |
+| `0x02` | 90.4 (85–95), highest the truck sits | Off-Road |
+| `0x04` | 133.0, lowest the truck sits | Access |
+| `0x0D` | 120.5, between Normal and Access | In Transit |
 
-Most likely, `3B01` and `3B3C` simply weren't sampled often enough (`freq` 600
-and 10) to catch the access-height moment, which is why the corner pressures
-and height sensors saw it and the state fields didn't.
+The map is now `1, 2, 4, 13`. `3B01` carries the same state in parallel:
+`0x100` pins to a front mean of 111.6 (Normal) and `0x800` to 133.0
+(Access). `0x400` has been seen once and never alongside a height sample, so
+it's Off-Road by elimination — unconfirmed, unlike the other three.
 
 The two balance ratios respond to cargo, not just faults. With the load area
 full, front balance read 0.99 and rear read 0.92 — the rear axle carrying more
@@ -529,38 +686,131 @@ on one side. Check the ratios unloaded before reading a low number as a leak.
 
 ## Polling
 
-The adapter sustains about **13 request/response round trips per second**,
-measured across many hours of logging. That is the ELM327's ceiling, not the
-CAN bus — 13 requests per second is negligible against 500 kbit/s, and
-diagnostic identifiers in the `7xx` range are low priority by CAN arbitration,
-so they yield to powertrain traffic automatically. Service `22` is read-only.
-Polling cannot harm anything; it can only compete with itself.
+### The budget was measured against the wrong ceiling
+
+For most of this file's history the budget was set against **13
+request/response round trips per second**, treated as the adapter's
+ceiling. That number is real, but it's the whole bus, and most of it
+belongs to the app, not to this signalset. Measured on 2026-09-20 (session
+2525): total adapter throughput was 13.43 req/s, splitting into AT
+commands (adapter setup, header changes, filter changes) at 3.27/s, the
+app's own internal mode-01/mode-09 polling — which never surfaces as a
+recordable signal — at 5.94/s, and this signalset's UDS service-`22`
+traffic at 4.22/s.
+
+Across seven sessions on 2026-09-19 and 2026-09-20, the UDS share stayed
+pinned between 4.1 and 5.1 req/s no matter how large the signalset was.
+Session 2504 polled 108 distinct DIDs and got 4.19 req/s. Session 2525
+polled 23 distinct DIDs and got 4.22 req/s — five times fewer commands,
+identical throughput. **The signalset's real ceiling is about 4.2 req/s,
+not 11.** This file had been asking for 10.53.
+
+Service `22` is read-only. Polling cannot harm anything; it can only
+compete with itself, and with the app's own traffic, for a share that
+doesn't grow no matter how much is asked of it.
 
 **`freq` is a minimum interval in seconds, not a rate.** Pelican documents it as
 the maximum frequency at which a command may be sent, expressed in seconds, so
 a *smaller* number polls *harder*. There is no priority field anywhere in the
 v3 format — command count and `freq` are the only levers.
 
-The budget in this file:
+The budget in this file, cut to fit the measured ceiling on 2026-09-20:
 
 | Interval | Commands | Contents |
 |---|---|---|
-| 1s | 4 | Manifold pressure, barometric, engine speed, vehicle speed |
-| 3s | 8 | Throttle, pedals, timing, lambda, load |
-| 5s | 10 | Temperatures, fuel trims bank 1, mass air flow, gearbox and diff temp, gear selector |
-| 10s | 14 | Air suspension, fuel system status B1/B2, O2 lambda/voltage B2S1 |
-| 20s | 2 | Commanded evap purge, O2 voltage/trim B1S2 |
-| 30s | 19 | Fuel trims bank 2, catalyst temperatures, battery, fuel level, and the undecoded probes shown to move |
-| 60s | 4 | `726/0202`, long term secondary O2 trim B1, relative throttle position, absolute throttle position B |
-| 300s | 8 | Eight raw single-byte probes from the ECM's own supported-PID bitmask, payload width unknown |
-| 600s | 20 | Odometer, oil level, oil volume, O2 sensors present, and undecoded probes that have never moved |
+| 2s | 2 | Engine speed, vehicle speed |
+| 5s | 6 | Calculated load, throttle position, manifold pressure, mass air flow, commanded equivalence ratio, gear selector |
+| 10s | 3 | Lambda B1S1, fuel rail pressure, ride height mode |
+| 15s | 9 | Timing advance, absolute load, both pedal sensors, coolant temp, short term trim B1, both height sensors, `3B01` |
+| 30s | 15 | Remaining temperatures (oil, charge air, gearbox, diff), fuel trims bank 2, commanded throttle, fuel level, MAF A/B, all four corner pressures, compressor activity |
+| 60s | 13 | Height offset, module voltage, lambda B2S1, ambient, barometric/altitude, battery, catalyst temps, IAT sensors, `3B02`, `3B0B`, `1E68` |
+| 120s | 11 | Slower diagnostics: fuel system status, evap purge, O2 voltage B1S2, secondary O2 trim, relative/absolute throttle, IAT 1/2, manifold pressure (fine), run time, `197C`, `D11C` |
+| 300s | 1 | Distance since codes cleared |
+| 600s | 6 | Odometer, oil level, oil volume, distance with MIL on, warm-ups since codes cleared, `DD01` |
 
-That totals 10.93 requests per second of demand against roughly 11 available
-once protocol overhead is removed — 89 commands, up from 73 after the
-sixteen added from the ECM's own supported-PID bitmask (see below). The four
-one-second commands exist so the boost calculation stays responsive.
+That's **66 commands at 3.922 req/s**, down from 85 commands at 10.528 —
+comfortably under the measured 4.2 req/s ceiling, where the old figure had
+looked safe against 11 req/s but was actually overdrawing the real one by
+more than double. Engine speed is back on a real cadence (2s) and carries
+the `engineSpeed` metric; it had not been polled since 2026-08-30 — see
+below for why.
 
-### Eight commands went quiet for three weeks. The app had a stale signalset
+### The app converges on a small working set, and it is roughly what it can store
+
+An earlier version of this section claimed the app "retires ECUs
+permanently" in a one-way ratchet, and recommended resetting the app's
+vehicle profile. **That was wrong, and it was wrong because it read a
+single day's sessions without checking the months behind them.** The
+correction is recorded here rather than deleted, because the wrong version
+was convincing.
+
+What the daily history actually shows, taking the longest session of each
+day since 2026-09-05 — the only sessions comparable to a drive:
+
+| Session | Date | Minutes | Distinct DIDs polled |
+|---|---|---|---|
+| 2397 | 09-05 | 67.2 | 13 |
+| 2402 | 09-06 | 25.9 | 17 |
+| 2426 | 09-09 | 63.9 | 17 |
+| 2441 | 09-10 | 57.8 | 17 |
+| 2460 | 09-11 | 63.9 | 17 |
+| 2470 | 09-13 | 35.5 | 17 |
+| 2495 | 09-19 | 50.0 | 19 |
+| 2497 | 09-19 | 38.7 | 18 |
+| 2525 | 09-20 | 137.7 | **23** |
+
+Long sessions have settled to between 12 and 19 commands for six weeks.
+The off-road drive polled 23, which is *more than any other long session in
+the period*. The drive was not degraded. It was the best long session on
+record, and the 61-of-84 figure is simply what this app has always done.
+
+The stable core is the interesting part. Thirteen commands appear in every
+long session going back to 09-05: `03F3`, `1E69`, `DD01`, `F404`, `F405`,
+`F406`, `F40D`, `F410`, `F42F`, `F431`, `F434`, `F442`, `F444`. Those are
+exactly thirteen of the sixteen commands that carried a `suggestedMetric`
+at the time. Not approximately — exactly. The three metric-carrying
+commands missing from the core are `F40C`, `F411` and `F443`, and `F411`
+joined the working set later.
+
+Read alongside "Only signals with a metric are ever recorded" below, the
+behaviour is coherent: **the app converges on polling the commands whose
+values it is going to keep.** Commands without a metric get exercised for a
+while after the signalset changes and then thin out, because the app has
+nothing to do with their values.
+
+That also explains the peripheral modules without inventing a ratchet.
+`7D3`, `792`, `732`, `726` and `761` do not carry a single metric-bearing
+command between them. They are not being punished; there is nothing on them
+the app would store.
+
+The one-day pattern that produced the ratchet theory is real but means
+something duller. Coverage spikes after the signalset changes and then
+settles: 108 distinct DIDs at 09:57 on 09-20, then 54, 58, 19 and 23 as the
+day went on, with several PRs merged in between. Session 2493 on 09-19 hit
+965 DIDs, which was the PID detector sweep. Coverage recovers on its own
+every time the file changes. **Nothing is stuck, and nothing needs
+resetting from inside the app.**
+
+**A command's presence in this file still does not mean it is being
+collected** — check the scan logs before relying on one. But the reason is
+ordinary triage by the app, not damage.
+
+What remains untested is whether cutting the request budget changes which
+commands make the working set. Asking for 10.53 req/s against a 4.2 req/s
+ceiling meant the app chose the 40% it would serve; asking for 3.922 means
+it does not have to choose. Whether it then serves all 66 is exactly what
+the next drive measures.
+
+### Eight commands went quiet for three weeks — the first sighting of the working set, not a separate incident
+
+This section originally explained an isolated 2026-08-30 incident as a
+stale copy of the signalset on the app's side. It wasn't isolated, and the
+stale copy was only half of it. Those eight commands were sitting outside
+the working set the app settles on between signalset changes, described
+above. The history below is kept as-is because the reasoning in it — ruling
+out the request budget and the `freq` tiers before landing on "the app must
+be holding stale data" — was a reasonable read of the evidence available
+that day, and because the refresh really did bring them back for a while.
 
 Between 2026-08-30 and 2026-09-19, eight commands in this file were never
 requested on a drive: `F40C`, `F411`, `F40E`, `F443`, `F449`, `F44A`, `F407`
@@ -569,23 +819,34 @@ engine speed value reached the signal database in fourteen months. Two
 synthetics could not compute either, `LR4_THROTTLE_TRACKING` needing `F411`
 and `LR4_PEDAL_AGREEMENT` needing `F449` and `F44A`.
 
-**Resolved on 2026-09-20.** Every command in the file was polled that drive.
-`F40C` was requested 172 times and answered 172 times, and engine speed is
-now recorded. Nothing in this file changed to cause that — the app had
-simply been running an older copy of the signalset, and picked up the
-current one.
+**Looked resolved on 2026-09-20, briefly.** Every command in the file was
+polled that morning. `F40C` was requested 172 times and answered 172
+times, and engine speed was recorded for the first time in fourteen
+months. At the time this was credited to the app picking up a fresher copy
+of the signalset, and that reading has held up: coverage does spike right
+after the file changes. What it does not do is stay there. By the 15:14
+session the working set was back to 23 commands, and `F40C` was outside it
+again. The eight commands were never broken; they sit outside the set the
+app settles on between signalset changes, which is roughly the commands
+whose values it stores. `F40C` carries `engineSpeed` and should have been
+in that set, and its absence is the one part of this that is still
+unexplained.
 
-Getting there meant ruling out the two obvious causes, and both remain worth
-knowing. It was not the request budget: demand was 10.21 req/s against the
-11-13 the adapter delivers. It was not the `freq` values either, because the
-dead commands shared tiers with live ones — `F40C` and `F40D` are both
-`freq` 1 and only `F40D` ran; `F411`, `F443`, `F449` and `F44A` sat at
-`freq` 3 alongside `F404`, `F434` and `F444`, which all ran.
+Getting to the "stale signalset" explanation meant ruling out the two
+obvious causes, and both remain worth knowing even though the explanation
+built on them was wrong. It was not the request budget: demand was 10.21
+req/s against the 11-13 the adapter appeared to deliver — appeared to,
+because that 11-13 figure was the whole-bus number, not this signalset's
+real share. It was not the `freq` values either, because the dead commands
+shared tiers with live ones — `F40C` and `F40D` are both `freq` 1 and only
+`F40D` ran; `F411`, `F443`, `F449` and `F44A` sat at `freq` 3 alongside
+`F404`, `F434` and `F444`, which all ran.
 
-The lesson that outlives the incident: **a command's presence in this file
-means nothing until the app has actually fetched the file.** Before
-concluding that a command is unsupported, confirm the app is holding the
-version you think it is.
+The lesson that outlives the incident, revised: **a command's presence in
+this file means nothing until the scan logs confirm the app is actually
+addressing its module this session.** Before concluding a command is
+unsupported, or that a fix worked, check which headers the app is
+addressing — not just which commands answer when you send them by hand.
 
 ### The seven probes, and how they turned out
 
@@ -667,7 +928,7 @@ The file is now 73 commands at 10.55 req/s.
 
 A DID that moves on a real drive earns a proper decode. One that stays flat
 through a full cycle — including a ride-height change and a terrain-mode
-switch — can be deleted for good rather than on suspicion. Do not read a
+switch — can be judged on evidence rather than on suspicion. Do not read a
 `7F 22 31` as "unsupported" without checking whether an extended session
 would have changed the answer.
 
@@ -680,7 +941,7 @@ tested the same day. **All sixteen answered.** Ten earn their place.
 
 | Command | Result |
 |---|---|
-| `22F466` | **Two mass airflow sensors.** A 2.09 g/s against B 1.78 g/s, summing to 3.88 against `F410`'s 4.16 a second later |
+| `22F466` | **Two mass airflow sensors.** A 2.09 g/s against B 1.78 g/s, summing to 3.88 against `F410`'s 4.16 a second later. One idle sample — see the correction below |
 | `22F467` | **Two coolant temperature sensors**, 61 °C and 35 °C |
 | `22F468` | **Two intake air temperature sensors**, 36 °C and 59 °C |
 | `22F403` | Fuel system status, two states over 14 samples: open loop on load or decel ×9, closed loop ×5 |
@@ -688,14 +949,16 @@ tested the same day. **All sixteen answered.** Ten earn their place.
 | `22F438` | Bank 2 lambda 0.853-1.985 over 29 valid samples; railed at `FFFF` on 23 of 52 |
 | `22F415` | Post-catalyst O2, 0.13-0.93 V and switching |
 | `22F445` / `22F447` | Relative throttle 2.7-22.7%, absolute throttle B 12.5-22.4% |
-| `22F470` | **Boost pressure.** Decoded against SAE J1979 PID 70: sensor A reads 24.72 kPa at idle |
+| `22F470` | Decoded against SAE J1979 PID 70: channel A reads 24.72 kPa at idle. Later shown to be manifold pressure at finer resolution, not a separate boost sensor — see "Duplicates found and removed" above |
 
-**The dual mass airflow sensors are the find.** MAF calibration was one of
-three candidate explanations for both banks correcting lean together, and
-`F466` shows the two intake tracts disagreeing by 17.5%. Their sum tracks
-the single `F410` figure, so they are the two halves of the same
-measurement. One sample, taken at idle where these sensors are least
-accurate — a lead, not a finding, and the reason `F466` now runs at `freq` 5.
+**The dual mass airflow sensors exist, but the 17.5% disagreement claim
+above was wrong — it rested on a single idle sample.** With 1,474 paired
+samples from the 2026-09-20 drive, the least-squares slope of (A+B) against
+the single MAF PID through the origin is 0.88, not 1.0, and individual
+pairs scatter badly: one pair reads 7.03 g/s against the single PID's
+18.16 g/s at the same instant. The split between the two channels is not
+trustworthy at this polling rate. Use the single MAF PID for anything
+quantitative; treat A and B as present but unvalidated.
 
 `F403` matters for the same investigation: the engine does reach closed
 loop, so the 7-9% long-term trims are real measurements rather than
@@ -715,16 +978,22 @@ not exist.
 returned `0x77`: bank 1 sensors 1, 2 and 3 and bank 2 sensors 1, 2 and 3 are
 present. That can never change, so it is recorded here instead of polled.
 
-Two still need samples: `F456` (three samples, all near zero) and `F458`
-(one sample, `7F`, meaning unknown).
+Two still needed samples at the time: `F456` (three samples, all near
+zero) and `F458` (one sample, `7F`, meaning unknown). `F458` is now
+resolved — it returns a `7F` negative response consistently and has been
+deleted; see "Nineteen commands deleted, and restored" under Undecoded. `F456` stayed in
+at `freq` 120.
 
-`F470` was the one command still leaving something on the table. Read
-against the SAE J1979 definition of PID 70 its ten bytes are commanded boost
-and measured boost for two channels, at 1/32 kPa. The support byte is `0x02`,
-which flags channel A as present, and channel A reads 24.72 kPa at idle.
-**This is the first direct boost measurement on this truck** — everything
-before it was inferred from manifold pressure over barometric. It costs no
-extra requests; the reply was already arriving and being thrown away.
+`F470` was read against the SAE J1979 definition of PID 70: its ten bytes
+are commanded boost and measured boost for two channels, at 1/32 kPa. The
+support byte is `0x02`, flagging channel A as present, and channel A read
+24.72 kPa at idle. At the time this looked like the first direct boost
+measurement on this truck. A wider check on 2026-09-20 against 525 paired
+samples found channel A tracking Manifold Pressure to within 1.3 kPa mean
+(r = 0.85) — it is the same manifold sensor at finer resolution, not a
+separate boost sensor. See "Duplicates found and removed" above. Boost is
+still only available by subtracting Barometric Pressure from Manifold
+Pressure, as below.
 
 Checking the rest of the signalset the same way found nothing else. Against
 the canonical SAE signalset, the only other unread fields in replies we
@@ -736,36 +1005,107 @@ already make are sensor-present bits and channels this engine does not have:
 Barometric pressure moved from `freq` 1 to `freq` 5 to pay for this. It does
 not change at 1 Hz, and it was consuming 0.9 req/s of a budget with no slack.
 
+### From 89 commands back down to 66
 
-### Metric slots, and why sixteen is the ceiling
+The narrative above tracks the file growing to 89 commands at 10.93 req/s
+over the course of 2026-09-20. Later the same day, session 2525 showed
+that budget had been measured against the wrong ceiling — 11 req/s that
+was never really available, against a true UDS share of about 4.2 req/s —
+and that the app settles on a working set of roughly twenty commands
+between signalset changes regardless of what the file asks for. The
+response was a re-tiering rather than a cull: nineteen commands were
+deleted and then restored as slow probes once it was clear the evidence
+against most of them was six to thirty samples (see "Nineteen commands
+deleted, and restored" under Undecoded), the duplicate signals resolved under
+"Duplicates found and removed" (PID 67 sensor 1 deleted outright, three of
+PID 70's four channels dropped as dead alongside it), and a re-tiering of
+everything that survived. The result is the 66-command, 3.922 req/s budget
+at the top of this section.
+
+### Only signals with a metric are ever recorded
+
+This is the most consequential thing measured on 2026-09-20, and it sets the
+boundary on what this whole project can deliver.
+
+**The app writes a signal to its database only if that signal carries a
+`suggestedMetric`. Everything else is requested, answered, decoded and
+thrown away.**
+
+Across fifteen months of backups, from 2025-06-29 to 2026-09-20, the signal
+database has held exactly 15 distinct signals. Not 84, not the 98 the file
+carried at its peak. Fifteen.
+
+The 137-minute drive on 2026-09-20 recorded 14, and they are precisely the
+metric-carrying signals whose commands were being polled. The signalset held
+16 metrics that day. The two missing from the database are `engineSpeed` and
+`absoluteEngineLoad`, and they are missing for the unrelated reason that
+their commands, `F40C` and `F443`, were among the 61 never sent. The match
+is exact in both directions: every metric-carrying polled signal was stored,
+and no signal without a metric ever was.
+
+The other two stores in the backup are not alternatives. `records` holds
+manual service and fuel-up entries and is empty. `tripLogger` holds the
+phone's own CoreLocation trace — latitude, longitude, altitude, speed — with
+no OBD content in it.
+
+What that costs, stated plainly: the metric enum has no slot for manifold
+pressure, ride height, suspension pressure, corner pressure, charge air
+temperature, barometric pressure, ambient temperature, rear differential
+temperature or boost. **None of those can ever be looked at historically
+through the app.** They exist live, or in the raw scan logs, and nowhere
+else.
+
+That includes the suspension work in its entirety. Even when the
+`7D3` module is being polled, no ride height and no corner pressure will be
+recorded as history. It includes the charge cooler coolant temperature newly
+decoded from PID 67 sensor 2 — a real signal, genuinely new, that will never
+persist.
+
+One limit on the claim: what was measured is that these signals are never
+*stored*. Whether the app renders them live is a separate question the logs
+cannot answer. This repo has always assumed that an `F4xx`-aliased signal
+does show up live in the app, and nothing here contradicts that; it is still
+an assumption, and it is one the owner can confirm from the app in a few
+seconds.
+
+The practical rule: a fast `freq` on a signal with no metric buys a live
+readout and nothing else. That can be worth paying for. It should be a
+deliberate choice rather than an accident.
+
+### Metric slots, seventeen of thirty-six
 
 The schema defines 36 `suggestedMetric` values — the slots Pelican treats as
-connectable. This signalset fills 16. The other 20 break down as:
+connectable. Per the section above they are also the only signals that get
+recorded at all, which makes this table the boundary of what is knowable
+about this truck over time, not just a list of gauges. This signalset fills
+17, up from 16 on 2026-09-20 when
+`fuelRate` was added as a computed signal (see "Fuel rate, now computed"
+above). The remaining 19 break down as:
 
 | Slots | Why they stay empty |
 |---|---|
 | 10 | Electric and hybrid only: state of charge and health, traction battery, charging, electric range, CVT deterioration |
 | 8 | Tire pressure and temperature, which this truck has not yet given up |
-| 2 | `fuelRate` needs PID 5E, which this ECM's own bitmask does not list, and `fuelRange` is a proprietary Ford DID |
+| 1 | `fuelRange` is a proprietary Ford DID |
 
-Nothing else can be claimed honestly. A synthetic could not rescue `fuelRate`
-either: the only formula operation the schema supports is `ratio`, a plain
-a divided by b with no constant and no scaling, so mass air flow over
-commanded lambda would land in the slot at fourteen-odd times the real value.
-An empty slot is better than a wrong gauge.
-
-Tire pressure is the one worth chasing. Eight of the twenty are tires, and
-`TESTING.md` records what the Jaguar signalset does and what has never been
-tried here.
+`fuelRate` looked like it belonged in this list too — the schema's only
+formula operation is `ratio`, a plain a divided by b with no constant and no
+scaling — but the constant can be folded into a hidden operand on one side
+of the ratio instead of the ratio itself, which is how it got filled. See
+above for the mechanism. Tire pressure is the one still worth chasing: eight
+of the nineteen empty slots are tires, and `TESTING.md` records what the
+Jaguar signalset does and what has never been tried here.
 
 ### Hidden signals
 
-Twenty-nine of the 98 signals carry `hidden: true`: every `*_RAW` probe and
-the `3B02` byte splits. They are still recorded, they simply do not clutter
-the app with values nobody can interpret yet. A probe earns its way out of
-hiding by being decoded and named.
+Eleven of the file's 84 signals (including synthetics) carry `hidden: true`:
+the remaining `*_RAW` probes and the `3B02` byte splits. Hiding keeps them
+from cluttering the app with values nobody can interpret yet. Note that none
+of them is recorded either way — none carries a metric, so `hidden` changes
+only what is shown, never what is kept. A probe earns its way out of hiding
+by being decoded and named.
 
-Twenty-three signals carry a `description`, concentrated on the probes and on
+Eighteen signals carry a `description`, concentrated on the probes and on
 the decoded signals with a catch — the inverted height sensors, the bank 2
 lambda that rails at `FFFF`, altitude being a barometric lookup rather than
 GPS.

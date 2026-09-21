@@ -12,7 +12,7 @@ repeat it.
 
 ## Layout
 
-- `signalsets/v3/default.json` — the signalset itself, 109 commands. The
+- `signalsets/v3/default.json` — the signalset itself, 66 commands. The
   only file the app actually consumes.
 - `tests/test_cases/2016/command_support.yaml` — manifest of which commands
   each ECU supports, used by the test suite.
@@ -36,10 +36,15 @@ repeat it.
   is often just addressed at the wrong offset for that module.
 - **`freq` is an interval in seconds, not a rate.** A lower number polls
   harder. Total demand is `sum(1/freq)` across all commands and must stay
-  under roughly 11 req/s, which is what the adapter actually delivers.
-  Current demand is 10.99 — there is almost no headroom. Adding a command
-  means trading it against a deletion or giving it a slow cadence (120s or
-  600s).
+  under **4.2 req/s**, which is measured, not assumed. The adapter delivers
+  about 13.4 req/s in total, but the app spends roughly 3.3 of that on AT
+  commands and 5.9 on its own internal mode-01 polling, which never
+  surfaces as a recordable signal. Signalset traffic gets what is left.
+  Measured across seven sessions, the UDS service-22 share stayed between
+  4.1 and 5.1 req/s no matter how big the signalset was: one session polled
+  108 distinct DIDs at 4.19 req/s and another polled 23 at 4.22 req/s.
+  Current demand is 3.922. Asking for more than the app can deliver does
+  not slow everything down evenly — see trap 5.
 
 ## Validation
 
@@ -100,7 +105,7 @@ run the actual response tests outside CI.
 These have all actually bitten:
 
 1. **YAML float trap.** In `command_support.yaml`, a plain-scalar entry made
-   up only of digits and dots (e.g. `726.220202`) parses as a YAML float,
+   up only of digits and dots (e.g. `751.222076`) parses as a YAML float,
    not a string, unless it's quoted. Any entry with no hex letter A–F
    anywhere in it must be double-quoted. After editing this file, verify no
    entry parsed as a non-string (see the validation command above).
@@ -112,7 +117,7 @@ These have all actually bitten:
    compute. Grep `synthetics` for a signal id before deleting the command
    that defines it.
 3. **Entry shape differs per ECU in `command_support.yaml`.** Most ECUs use
-   `<hdr>.22<DID>` (e.g. `795.221E89`). `7E1` in the `supported_commands_by_ecu`
+   `<hdr>.22<DID>` (e.g. `795.221E8A`). `7E1` in the `supported_commands_by_ecu`
    section uses `<hdr>.<rax>.22<DID>` (e.g. `7E1.7E9.221E69`). There is no
    reason for the difference — `7E1`'s `rax` is `7E9`, exactly `hdr+8`, the
    same as everywhere else. It is just how that block was written. Match
@@ -123,15 +128,72 @@ These have all actually bitten:
    the main checkout, or the agent must be told explicitly to check out that
    branch — otherwise it silently operates on stale files and produces
    confident, wrong results.
-5. **Eight commands have not been polled since 2026-08-30** — `F40C`,
-   `F411`, `F40E`, `F443`, `F449`, `F44A`, `F407`, `033E` — despite being
-   present in the signalset with sane `freq` values and the request budget
-   having headroom at the time. Engine speed has therefore never actually
-   been recorded as a signal, even though the command is in the file and
-   the underlying standard PID is being polled constantly. Cause unknown;
-   see the "Eight commands stopped being polled" section in `README.md`.
-   **A command's presence in this file does not mean it is actually being
-   collected** — check the scan logs before relying on one.
+5. **The app settles on a working set of roughly twenty commands and
+   ignores the rest, however big this file is.** Taking the longest session
+   of each day since 2026-09-05, coverage has been 12 to 23 distinct DIDs
+   every time, including the 137-minute drive on 09-20 that polled 23 — the
+   widest of any long session in the period. Coverage spikes right after
+   the signalset changes (108 DIDs on the morning of 09-20, 965 during a
+   PID detector run) and then settles back within hours.
+
+   The stable core is exactly the metric-carrying commands. Thirteen
+   commands appear in every long session since 09-05, and they are
+   precisely thirteen of the sixteen that carried a `suggestedMetric` at
+   the time. Read with trap 8, the rule is that **the app converges on
+   polling what it will store.** Modules with no metric-bearing command on
+   them — `7D3`, `792`, `732`, `726`, `761` — drift out of the rotation
+   entirely.
+
+   **A command's presence in this file does not mean it is being
+   collected.** Check the scan logs before relying on one. But do not read
+   a quiet module as a broken or "retired" one: an earlier version of this
+   trap claimed the app permanently retires ECUs and told the owner to
+   reset the app's vehicle profile. That was wrong. It came from reading
+   one day's sessions without the months behind them, and coverage
+   recovers on its own every time the file changes.
+
+   A corollary for pruning: a quiet command is not a dead one. Nineteen
+   commands were deleted on 2026-09-20 for being constant and restored the
+   same day, because most had between 6 and 30 samples and none of those
+   samples covered the event the command would report — `1E88`'s six were
+   all taken with the differential unlocked. A probe costs 0.0017 req/s at
+   `freq` 600. Deleting it costs the answer. Park it, don't cull it.
+
+6. **Standard mode-01 PIDs are already being polled by the app, constantly,
+   and a proprietary DID may duplicate one.** Before adding a signal, check
+   whether the truck already answers it somewhere cheaper, and check whether
+   two DIDs you both poll are the same measurement. Three duplicates have
+   been found this way by correlating logged samples: PID 67 sensor 1 equals
+   the engine coolant PID to 0.0 C over 135 pairs; PID 70 channel A equals
+   manifold pressure to 1.3 kPa over 525 pairs; and the proprietary oil
+   temperature DID equals standard PID 5C to 0.7 C over 1,135 pairs once
+   warm. Correlate against the scan logs before believing a new DID is new.
+
+7. **Synthetic signals support only `op: ratio`, a plain a/b with no
+   constant** — but `fmt.div` on an ordinary signal is a `number`, not an
+   integer, so a scaling constant can be folded into a hidden operand and
+   the ratio then comes out in real units. `LR4_FUEL_RATE` is built that
+   way: `LR4_FUEL_DIVISOR` is commanded lambda premultiplied by
+   14.7 x 745 / 3600, so MAF divided by it is litres per hour.
+
+8. **Only signals carrying a `suggestedMetric` are ever written to the
+   app's signal database.** Measured over fifteen months of backups: the
+   store has held exactly 15 distinct signals, and they are precisely the
+   ones with a metric. Everything else is requested, answered, decoded and
+   discarded. During a 137-minute drive on 2026-09-20 the 14 signals
+   recorded were exactly the metric-carrying signals on commands that were
+   being polled; the two metric-carrying signals that were missing
+   (`engineSpeed`, `absoluteEngineLoad`) were missing because their
+   commands were not polled at all. The other two stores in the backup are
+   not alternatives: `records` holds manual service and fuel entries, and
+   `tripLogger` holds the phone's own GPS trace.
+
+   The metric enum has 36 values and no slot for manifold pressure, ride
+   height, suspension pressure, charge air temperature or anything else
+   specific to this truck. So most of what this signalset decodes can be
+   watched live but can never be looked at historically except by reading
+   the scan logs. Weigh that before spending budget on a signal: a fast
+   `freq` on a signal with no metric buys a live readout and nothing else.
 
 ## Where the data comes from
 
