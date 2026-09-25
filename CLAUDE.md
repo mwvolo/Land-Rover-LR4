@@ -43,7 +43,7 @@ repeat it.
   Measured across seven sessions, the UDS service-22 share stayed between
   4.1 and 5.1 req/s no matter how big the signalset was: one session polled
   108 distinct DIDs at 4.19 req/s and another polled 23 at 4.22 req/s.
-  Current demand is 4.100. Asking for more than the app can deliver does
+  Current demand is 4.083. Asking for more than the app can deliver does
   not slow everything down evenly — see trap 5.
 
 ## Validation

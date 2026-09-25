@@ -877,26 +877,55 @@ the maximum frequency at which a command may be sent, expressed in seconds, so
 a *smaller* number polls *harder*. There is no priority field anywhere in the
 v3 format — command count and `freq` are the only levers.
 
-The budget in this file, cut to fit the measured ceiling on 2026-09-20:
+The budget in this file, cut to fit the measured ceiling on 2026-09-20 and
+rebalanced on 2026-09-25 so the fuel readout updates every few seconds:
 
 | Interval | Commands | Contents |
 |---|---|---|
-| 2s | 2 | Engine speed, vehicle speed |
-| 5s | 6 | Calculated load, throttle position, manifold pressure, mass air flow, commanded equivalence ratio, gear selector |
-| 10s | 3 | Lambda B1S1, fuel rail pressure, ride height mode |
-| 15s | 9 | Timing advance, absolute load, both pedal sensors, coolant temp, short term trim B1, both height sensors, `3B01` |
-| 30s | 15 | Remaining temperatures (oil, charge air, gearbox, diff), fuel trims bank 2, commanded throttle, fuel level, MAF A/B, all four corner pressures, compressor activity |
-| 60s | 13 | Height offset, module voltage, lambda B2S1, ambient, barometric/altitude, battery, catalyst temps, IAT sensors, `3B02`, `3B0B`, `1E68` |
-| 120s | 11 | Slower diagnostics: fuel system status, evap purge, O2 voltage B1S2, secondary O2 trim, relative/absolute throttle, IAT 1/2, manifold pressure (fine), run time, `197C`, `D11C` |
+| 2s | 3 | Engine speed, vehicle speed, mass air flow |
+| 3s | 1 | Commanded equivalence ratio |
+| 5s | 2 | Calculated load, manifold pressure |
+| 10s | 3 | Throttle position, gear selector, ride height mode |
+| 15s | 6 | Coolant temp, short term trim B1, lambda B1S1, both height sensors, `3B01` |
+| 30s | 20 | Remaining temperatures (oil, charge air, gearbox, diff), fuel rail pressure, timing advance, absolute load, both pedal sensors, fuel trims, commanded throttle, fuel level, all four corner pressures, compressor activity, `3B4D` |
+| 60s | 17 | Height offset, MAF A/B, lambda B2S1, ambient, barometric/altitude, battery, catalyst temps, IAT, rail gauge pressure, charge cooler coolant, `3B02`, `3B0B`, `D11A`, `1E68`, `1E88`, `1E89` |
+| 120s | 20 | Slower diagnostics: fuel system status, evap purge, O2 voltage B1S2, secondary O2 trims, relative/absolute throttle, IAT 1/2, manifold pressure (fine), run time, `197C`, `D11C`, `3B00`, `3B08`, `2A32` to `2A37` |
 | 300s | 1 | Distance since codes cleared |
-| 600s | 6 | Odometer, oil level, oil volume, distance with MIL on, warm-ups since codes cleared, `DD01` |
+| 600s | 18 | Odometer, oil level, oil volume, distance with MIL on, warm-ups since codes cleared, monitor status, fuel type, OBD standard, `DD01`, `1E6A`, `726 0202`, `2A38` to `2A3C` |
 
-That's **66 commands at 3.922 req/s**, down from 85 commands at 10.528 —
-comfortably under the measured 4.2 req/s ceiling, where the old figure had
-looked safe against 11 req/s but was actually overdrawing the real one by
-more than double. Engine speed is back on a real cadence (2s) and carries
-the `engineSpeed` metric; it had not been polled since 2026-08-30 — see
-below for why.
+That's **91 commands at 4.083 req/s**, under the measured 4.2 req/s
+ceiling. The 2026-09-20 cut took it from 85 commands at 10.528 to 66 at
+3.922; the probes restored the same day and the decodes of 2026-09-23 took
+it to 91 at 4.100; and the 2026-09-25 rebalance paid for mass air flow at
+2s and commanded lambda at 3s (up from 5s each) by slowing throttle
+position and the gear selector to 10s, lambda B1S1 to 15s, rail pressure,
+timing advance, absolute load and both pedal sensors to 30s, and MAF A/B
+to 60s. Engine speed is on a real cadence (2s) and carries the
+`engineSpeed` metric; it had not been polled since 2026-08-30 — see below
+for why.
+
+**What the drives of 2026-09-22 and 2026-09-23 actually polled.** Three
+drives, 14, 10 and 22 minutes, and the app sent 19, 20 and 21 distinct
+DIDs: the `7E0` `F4xx` core plus oil temp, charge air temp, gearbox temp,
+diff temp and the odometer. Not one request went to `7D3`, `732`, `792`,
+`761` or `726`. The last time any suspension, gear-selector or counter
+probe was sent was 2026-09-21 02:20 UTC, in the session right after the
+probes were restored. So the open items that need a probe to be alive
+(held-Access, the Terrain Response map, the `792` counters) got nothing
+from these drives, exactly as trap 5 predicts: the app converged on the
+metric-bearing set and the probes dropped out of rotation. The 2026-09-23
+drive also predates the merge of the ride-height and wideband decodes, so
+the reshuffle a file change usually causes has not had a drive yet. The
+four sessions logged after it contain no traffic at all.
+
+The cadence the app delivered on that drive is worth having: commands
+asked at 5s were answered every 5.7s, at 15s every 15.5s, and the two at 2s
+every 3.05s. So a `freq` is honoured within about 15% except at the top,
+where 2s buys 3s. The 21 commands it chose add up to about 1.8 req/s, well
+under the ceiling; the app was not short of budget, it was short of
+interest. The fuel operands were on the 5.7s cadence, which is why the
+fuel readout felt slow.
+
 
 ### The app converges on a small working set, and it is roughly what it can store
 
