@@ -319,7 +319,7 @@ positive trim.
 
 ## Computed signals
 
-The signalset defines eight synthetic signals. Seven are a **ratio between
+The signalset defines twelve synthetic signals. Seven are a **ratio between
 two readings that should hold a known value**, which makes them suited to
 a display: you learn the normal number once, and anything else is a
 signal. The eighth, Fuel Rate, is a different shape — a real physical
@@ -352,28 +352,88 @@ needs no altitude correction.
 The ECM's own supported-PID bitmasks (`0100 = BFBFACD3`, `0120 = A007B119`,
 `0140 = FED08511`, `0160 = 07010000`) say PIDs `5E` and `9D` are both
 unsupported. The truck does not report fuel rate. Any app showing one is
-computing it, and now this signalset does too — the eighth synthetic,
-added 2026-09-20.
+computing it, and now this signalset does too — added 2026-09-20 in litres
+per hour, switched to US gallons per hour on 2026-09-24.
 
 ```
-Litres per hour = MAF (g/s) / (Lambda × 14.7 × 745 / 3600)
-                = MAF / (Lambda × 3.0421)
+Gallons per hour = MAF (g/s) / (Lambda × 14.7 × 745 / 3600 × 3.785)
+                 = MAF / (Lambda × 11.516)
 ```
+
+MAF is grams of air per second; 14.7 is the stoichiometric air-to-fuel
+ratio for gasoline; 745 g/L is the density of gasoline; 3600 converts
+seconds to hours; 3.785 L/gal converts to US gallons. Commanded lambda
+scales the stoichiometric ratio to whatever the ECU is actually targeting.
 
 The schema's synthetic operation is a plain ratio with no constant, so the
-constant was folded into a hidden operand instead: `LR4_FUEL_DIVISOR` reads
-Commanded Equivalence Ratio (`22F444`) with `div` set to `10771.53`
-(`32768 / 3.0421`), which yields `Lambda × 3.0421` directly. `LR4_FUEL_RATE`
-is then Mass Air Flow divided by that, already in litres per hour, and
-carries `suggestedMetric: fuelRate`.
+constant is folded into a hidden operand: `LR4_FUEL_DIVISOR` reads Commanded
+Equivalence Ratio (`22F444`) with `div` set to `2845.54` (`32768 / 11.516`),
+which yields `Lambda × 11.516` directly. `LR4_FUEL_RATE` is Mass Air Flow
+divided by that, already in gallons per hour, and carries
+`suggestedMetric: fuelRate`. The unit is declared `gallonsPerHour`, one of
+the schema's enum values, rather than relying on the app to convert.
 
-Validated against the 2026-09-20 drive: integrating the formula over 1,480
-MAF samples gives 11.21 L burned. The tank gauge fell from 87.8% to 76.9%
-over the same drive, which on the 86.3 L tank is 9.48 L — agreement to
+#### The other ways to look at it
+
+Five fuel synthetics now exist. Every one is built from the same three
+polled DIDs, so none costs any bandwidth; the budget is unchanged at
+4.100 req/s.
+
+| Signal | Formula | Unit | Lambda? |
+|---|---|---|---|
+| Fuel Rate | MAF / (λ × 11.516) | gal/h | yes |
+| Fuel Rate (gal/min) | MAF / (λ × 690.9) | scalar, labelled | yes |
+| Fuel Economy (mpg) | (mph × 11.516) / MAF | scalar, labelled | assumed 1 |
+| Fuel Use (gal/100 mi) | MAF / (mph × 0.1152) | scalar, labelled | assumed 1 |
+| Fuel Economy (mpg, lambda-corrected, test) | mph / Fuel Rate | scalar, labelled | yes, if it works |
+
+Two constraints shape that table. The unit enum has `gallonsPerHour` and
+nothing else for fuel: no gallons per minute, no miles per gallon, no
+gallons per hundred miles, no litres per 100 km. Those signals are declared
+`scalar` and carry the unit in their name. And a ratio has room for only
+two operands, so an exact mpg (speed, MAF *and* lambda) is one operand too
+many. The mpg and gal/100 mi signals drop lambda and assume 1.0, which is
+true whenever the ECU is in closed loop — most of any drive — and wrong
+under enrichment (lambda 0.8 at full throttle, so the readout is 25%
+optimistic) and during decel fuel cut (commanded lambda reads 2.0, the
+real consumption is zero, the readout is finite). On the 2026-09-23 drive
+the stoichiometric assumption cost 3% over the trip: 17.3 mpg against 17.8
+with lambda.
+
+The lambda-corrected mpg is an experiment. It divides a hidden mph copy of
+vehicle speed by the Fuel Rate synthetic itself, which only works if the
+app resolves a synthetic operand that is another synthetic. Nothing in the
+schema says either way, and no other OBDb signalset tries it. If it shows a
+number on the next drive, it is the mpg to keep and the stoichiometric one
+can go. If it stays blank, the app evaluates synthetics against raw
+signals only, and the stoichiometric version is as good as a ratio gets.
+
+Ways that were considered and do not work with what this truck offers:
+injector duty or pulse width (no DID found), the SAE fuel rate PIDs `5E`
+and `9D` (unsupported, above), and fuel level delta over distance. The last
+one is real but coarse — the gauge is 8-bit, one step is 0.34 L, and the
+trip logger already records tank level at the start and end of every
+journey in its own store, so it makes a check on the formula rather than a
+live signal.
+
+Validated twice. Integrating the formula over 1,480 MAF samples on the
+2026-09-20 drive gives 11.21 L (2.96 gal) burned; the tank gauge fell from
+87.8% to 76.9%, which on the 86.3 L tank is 9.48 L (2.50 gal) — agreement to
 about 18%, on the pessimistic side, over 91.5 km (19.2 mpg by the
-formula). It's an estimate, not a measurement: the gauge is 8-bit (one step
-is 0.34 L), and float angle off-road makes it worse. Treat Fuel Rate as
-directionally useful, not a trip computer.
+formula). On the 2026-09-23 drive, 15.2 km in 21 minutes, the formula gives
+0.54 gal against 0.45 gal on the gauge, where a single gauge step is
+0.09 gal. Treat all five as directionally useful, not a trip computer.
+
+#### Decimal places are the app's call
+
+The stored fuel-rate values are full floats (`44.309198338607594`), and
+that is what the app prints for a synthetic. Nothing in the signalset
+changes it: the schema's `fmt` block has scaling, range, unit and map
+fields and no precision field, and a synthetic has fewer fields still. The
+same is true of the one decimal that appears on temperatures once the app
+is set to Fahrenheit: the signal is an integer in Celsius, the conversion
+makes it fractional, and the app's formatter keeps one place. Both are
+requests for the app (support@clutch.engineering), not for this file.
 
 ---
 
@@ -817,26 +877,55 @@ the maximum frequency at which a command may be sent, expressed in seconds, so
 a *smaller* number polls *harder*. There is no priority field anywhere in the
 v3 format — command count and `freq` are the only levers.
 
-The budget in this file, cut to fit the measured ceiling on 2026-09-20:
+The budget in this file, cut to fit the measured ceiling on 2026-09-20 and
+rebalanced on 2026-09-25 so the fuel readout updates every few seconds:
 
 | Interval | Commands | Contents |
 |---|---|---|
-| 2s | 2 | Engine speed, vehicle speed |
-| 5s | 6 | Calculated load, throttle position, manifold pressure, mass air flow, commanded equivalence ratio, gear selector |
-| 10s | 3 | Lambda B1S1, fuel rail pressure, ride height mode |
-| 15s | 9 | Timing advance, absolute load, both pedal sensors, coolant temp, short term trim B1, both height sensors, `3B01` |
-| 30s | 15 | Remaining temperatures (oil, charge air, gearbox, diff), fuel trims bank 2, commanded throttle, fuel level, MAF A/B, all four corner pressures, compressor activity |
-| 60s | 13 | Height offset, module voltage, lambda B2S1, ambient, barometric/altitude, battery, catalyst temps, IAT sensors, `3B02`, `3B0B`, `1E68` |
-| 120s | 11 | Slower diagnostics: fuel system status, evap purge, O2 voltage B1S2, secondary O2 trim, relative/absolute throttle, IAT 1/2, manifold pressure (fine), run time, `197C`, `D11C` |
+| 2s | 3 | Engine speed, vehicle speed, mass air flow |
+| 3s | 1 | Commanded equivalence ratio |
+| 5s | 2 | Calculated load, manifold pressure |
+| 10s | 3 | Throttle position, gear selector, ride height mode |
+| 15s | 6 | Coolant temp, short term trim B1, lambda B1S1, both height sensors, `3B01` |
+| 30s | 20 | Remaining temperatures (oil, charge air, gearbox, diff), fuel rail pressure, timing advance, absolute load, both pedal sensors, fuel trims, commanded throttle, fuel level, all four corner pressures, compressor activity, `3B4D` |
+| 60s | 17 | Height offset, MAF A/B, lambda B2S1, ambient, barometric/altitude, battery, catalyst temps, IAT, rail gauge pressure, charge cooler coolant, `3B02`, `3B0B`, `D11A`, `1E68`, `1E88`, `1E89` |
+| 120s | 20 | Slower diagnostics: fuel system status, evap purge, O2 voltage B1S2, secondary O2 trims, relative/absolute throttle, IAT 1/2, manifold pressure (fine), run time, `197C`, `D11C`, `3B00`, `3B08`, `2A32` to `2A37` |
 | 300s | 1 | Distance since codes cleared |
-| 600s | 6 | Odometer, oil level, oil volume, distance with MIL on, warm-ups since codes cleared, `DD01` |
+| 600s | 18 | Odometer, oil level, oil volume, distance with MIL on, warm-ups since codes cleared, monitor status, fuel type, OBD standard, `DD01`, `1E6A`, `726 0202`, `2A38` to `2A3C` |
 
-That's **66 commands at 3.922 req/s**, down from 85 commands at 10.528 —
-comfortably under the measured 4.2 req/s ceiling, where the old figure had
-looked safe against 11 req/s but was actually overdrawing the real one by
-more than double. Engine speed is back on a real cadence (2s) and carries
-the `engineSpeed` metric; it had not been polled since 2026-08-30 — see
-below for why.
+That's **91 commands at 4.083 req/s**, under the measured 4.2 req/s
+ceiling. The 2026-09-20 cut took it from 85 commands at 10.528 to 66 at
+3.922; the probes restored the same day and the decodes of 2026-09-23 took
+it to 91 at 4.100; and the 2026-09-25 rebalance paid for mass air flow at
+2s and commanded lambda at 3s (up from 5s each) by slowing throttle
+position and the gear selector to 10s, lambda B1S1 to 15s, rail pressure,
+timing advance, absolute load and both pedal sensors to 30s, and MAF A/B
+to 60s. Engine speed is on a real cadence (2s) and carries the
+`engineSpeed` metric; it had not been polled since 2026-08-30 — see below
+for why.
+
+**What the drives of 2026-09-22 and 2026-09-23 actually polled.** Three
+drives, 14, 10 and 22 minutes, and the app sent 19, 20 and 21 distinct
+DIDs: the `7E0` `F4xx` core plus oil temp, charge air temp, gearbox temp,
+diff temp and the odometer. Not one request went to `7D3`, `732`, `792`,
+`761` or `726`. The last time any suspension, gear-selector or counter
+probe was sent was 2026-09-21 02:20 UTC, in the session right after the
+probes were restored. So the open items that need a probe to be alive
+(held-Access, the Terrain Response map, the `792` counters) got nothing
+from these drives, exactly as trap 5 predicts: the app converged on the
+metric-bearing set and the probes dropped out of rotation. The 2026-09-23
+drive also predates the merge of the ride-height and wideband decodes, so
+the reshuffle a file change usually causes has not had a drive yet. The
+four sessions logged after it contain no traffic at all.
+
+The cadence the app delivered on that drive is worth having: commands
+asked at 5s were answered every 5.7s, at 15s every 15.5s, and the two at 2s
+every 3.05s. So a `freq` is honoured within about 15% except at the top,
+where 2s buys 3s. The 21 commands it chose add up to about 1.8 req/s, well
+under the ceiling; the app was not short of budget, it was short of
+interest. The fuel operands were on the 5.7s cadence, which is why the
+fuel readout felt slow.
+
 
 ### The app converges on a small working set, and it is roughly what it can store
 
@@ -1202,8 +1291,9 @@ Jaguar signalset does and what has never been tried here.
 
 ### Hidden signals
 
-Eleven of the file's 84 signals (including synthetics) carry `hidden: true`:
-the remaining `*_RAW` probes and the `3B02` byte splits.
+Thirty-seven of the file's 119 signals (including synthetics) carry
+`hidden: true`: the `*_RAW` probes, the `3B02` byte splits and the
+synthetic operands.
 
 **`hidden: true` does not appear to do anything in this app.** Screenshots
 taken on 2026-09-20 show `3B00 Raw`, `3B01 Raw`, `3B02 Byte 1`, `3B4D Raw`,
