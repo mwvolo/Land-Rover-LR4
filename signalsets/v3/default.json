@@ -300,7 +300,10 @@
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40D"}, "freq": 2,
   "signals": [
-    {"id": "LR4_SPEED", "path": "Movement", "fmt": { "len": 8, "max": 255, "unit": "kilometersPerHour" }, "name": "Vehicle Speed", "suggestedMetric": "speed"}
+    {"id": "LR4_SPEED", "path": "Movement", "fmt": { "len": 8, "max": 255, "unit": "kilometersPerHour" }, "name": "Vehicle Speed", "suggestedMetric": "speed"},
+    {"id": "LR4_SPEED_MPH", "hidden": true, "path": "Movement", "fmt": { "len": 8, "max": 158.4, "mul": 0.621371, "unit": "milesPerHour" }, "name": "Vehicle Speed (mph operand)", "description": "Speed in mph as a synthetic operand. Divided by the gal/h fuel rate it gives lambda-corrected mpg, if the app lets a synthetic read another synthetic. That is untested; see Fuel Economy (lambda-corrected, test)."},
+    {"id": "LR4_MPG_NUMERATOR", "hidden": true, "path": "Movement", "fmt": { "len": 8, "max": 1824.6, "mul": 7.15535, "unit": "scalar" }, "name": "Fuel Economy Numerator", "description": "Speed in mph premultiplied by 14.7 x 745 / 3600 x 3.785, so that dividing it by mass air flow gives mpg at lambda 1. The synthetic ratio has room for only two operands, so commanded lambda is assumed stoichiometric. Closed-loop cruise is; enrichment and fuel cut are not."},
+    {"id": "LR4_GP100_DENOMINATOR", "hidden": true, "path": "Movement", "fmt": { "len": 8, "max": 18.25, "mul": 0.0715535, "unit": "scalar" }, "name": "Gallons per 100 Miles Denominator", "description": "Speed in mph times 14.7 x 745 / 3600 x 3.785 / 100, so that mass air flow divided by it gives US gallons per 100 miles at lambda 1."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F40E"}, "freq": 15,
   "signals": [
@@ -420,7 +423,8 @@
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F444"}, "freq": 5,
   "signals": [
     {"id": "LR4_EQ_RATIO", "path": "Engine", "fmt": { "len": 16, "max": 2, "div": 32768, "unit": "scalar" }, "name": "Equivalence Ratio", "suggestedMetric": "commandedLambda"},
-    {"id": "LR4_FUEL_DIVISOR", "hidden": true, "path": "Engine", "fmt": { "len": 16, "max": 6.084, "div": 10771.53, "unit": "scalar" }, "name": "Fuel Rate Divisor", "description": "Commanded lambda premultiplied by 14.7 x 745 / 3600 so that mass air flow divided by this value is litres per hour. Exists only because synthetic signals support a plain ratio with no constant; it is the constant, folded into the divisor."}
+    {"id": "LR4_FUEL_DIVISOR", "hidden": true, "path": "Engine", "fmt": { "len": 16, "max": 23.031, "div": 2845.54, "unit": "scalar" }, "name": "Fuel Rate Divisor (gal/h)", "description": "Commanded lambda premultiplied by 14.7 x 745 / 3600 x 3.785 so that mass air flow divided by this value is US gallons per hour. Exists only because synthetic signals support a plain ratio with no constant; it is the constant, folded into the divisor."},
+    {"id": "LR4_FUEL_DIVISOR_MIN", "hidden": true, "path": "Engine", "fmt": { "len": 16, "max": 1381.86, "div": 47.426, "unit": "scalar" }, "name": "Fuel Rate Divisor (gal/min)", "description": "The gal/h divisor with a further x60 folded in, so mass air flow divided by it is US gallons per minute."}
   ]},
 { "hdr": "7E0", "rax": "7E8", "cmd": {"22": "F446"}, "freq": 60,
   "signals": [
@@ -448,8 +452,20 @@
   ]}
 ],
 "synthetics": [
-  { "id": "LR4_FUEL_RATE", "path": "Fuel", "name": "Fuel Rate", "max": 120, "unit": "litersPerHour", "suggestedMetric": "fuelRate", "formula": {
+  { "id": "LR4_FUEL_RATE", "path": "Fuel", "name": "Fuel Rate", "max": 32, "unit": "gallonsPerHour", "suggestedMetric": "fuelRate", "formula": {
     "op": "ratio", "a": "LR4_MAF", "b": "LR4_FUEL_DIVISOR"
+  }},
+  { "id": "LR4_FUEL_RATE_GPM", "path": "Fuel", "name": "Fuel Rate (gal/min)", "max": 0.6, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_MAF", "b": "LR4_FUEL_DIVISOR_MIN"
+  }},
+  { "id": "LR4_MPG", "path": "Fuel", "name": "Fuel Economy (mpg)", "max": 200, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_MPG_NUMERATOR", "b": "LR4_MAF"
+  }},
+  { "id": "LR4_GAL_PER_100MI", "path": "Fuel", "name": "Fuel Use (gal/100 mi)", "max": 100, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_MAF", "b": "LR4_GP100_DENOMINATOR"
+  }},
+  { "id": "LR4_MPG_LAMBDA", "path": "Fuel", "name": "Fuel Economy (mpg, lambda-corrected, test)", "max": 200, "unit": "scalar", "formula": {
+    "op": "ratio", "a": "LR4_SPEED_MPH", "b": "LR4_FUEL_RATE"
   }},
   { "id": "LR4_BANK_BALANCE", "path": "Engine", "name": "Bank Balance", "max": 3, "unit": "scalar", "formula": {
     "op": "ratio", "a": "LR4_CAT_TEMP_B1", "b": "LR4_CAT_TEMP_B2"

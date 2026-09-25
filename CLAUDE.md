@@ -12,7 +12,7 @@ repeat it.
 
 ## Layout
 
-- `signalsets/v3/default.json` — the signalset itself, 66 commands. The
+- `signalsets/v3/default.json` — the signalset itself, 91 commands. The
   only file the app actually consumes.
 - `tests/test_cases/2016/command_support.yaml` — manifest of which commands
   each ECU supports, used by the test suite.
@@ -43,7 +43,7 @@ repeat it.
   Measured across seven sessions, the UDS service-22 share stayed between
   4.1 and 5.1 req/s no matter how big the signalset was: one session polled
   108 distinct DIDs at 4.19 req/s and another polled 23 at 4.22 req/s.
-  Current demand is 3.922. Asking for more than the app can deliver does
+  Current demand is 4.100. Asking for more than the app can deliver does
   not slow everything down evenly — see trap 5.
 
 ## Validation
@@ -180,7 +180,11 @@ These have all actually bitten:
    integer, so a scaling constant can be folded into a hidden operand and
    the ratio then comes out in real units. `LR4_FUEL_RATE` is built that
    way: `LR4_FUEL_DIVISOR` is commanded lambda premultiplied by
-   14.7 x 745 / 3600, so MAF divided by it is litres per hour.
+   14.7 x 745 / 3600 x 3.785, so MAF divided by it is US gallons per hour.
+   Two operands is also the ceiling: anything needing three (speed, MAF
+   and lambda for an exact mpg) has to drop one, which is why the mpg
+   synthetics assume lambda 1. Whether a synthetic may read another
+   synthetic is untested; `LR4_MPG_LAMBDA` exists to find out.
 
 8. **Only signals carrying a `suggestedMetric` are ever written to the
    app's signal database, but every signal displays live.** Screenshots on
@@ -204,6 +208,14 @@ These have all actually bitten:
    watched live but can never be looked at historically except by reading
    the scan logs. Weigh that before spending budget on a signal: a fast
    `freq` on a signal with no metric buys a live readout and nothing else.
+
+9. **Nothing in the signalset controls how many decimal places the app
+   shows.** The schema's `fmt` has scaling, range, unit and map fields
+   and no precision field, and the synthetics block has even less. The
+   app decides: integer-scaled signals print as integers, a Celsius
+   signal shown in Fahrenheit picks up one decimal from the conversion,
+   and a synthetic ratio prints its full float. There is no `div`, `max`
+   or unit trick that changes this; it is a feature request for the app.
 
 ## Where the data comes from
 

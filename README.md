@@ -319,7 +319,7 @@ positive trim.
 
 ## Computed signals
 
-The signalset defines eight synthetic signals. Seven are a **ratio between
+The signalset defines twelve synthetic signals. Seven are a **ratio between
 two readings that should hold a known value**, which makes them suited to
 a display: you learn the normal number once, and anything else is a
 signal. The eighth, Fuel Rate, is a different shape — a real physical
@@ -352,28 +352,88 @@ needs no altitude correction.
 The ECM's own supported-PID bitmasks (`0100 = BFBFACD3`, `0120 = A007B119`,
 `0140 = FED08511`, `0160 = 07010000`) say PIDs `5E` and `9D` are both
 unsupported. The truck does not report fuel rate. Any app showing one is
-computing it, and now this signalset does too — the eighth synthetic,
-added 2026-09-20.
+computing it, and now this signalset does too — added 2026-09-20 in litres
+per hour, switched to US gallons per hour on 2026-09-24.
 
 ```
-Litres per hour = MAF (g/s) / (Lambda × 14.7 × 745 / 3600)
-                = MAF / (Lambda × 3.0421)
+Gallons per hour = MAF (g/s) / (Lambda × 14.7 × 745 / 3600 × 3.785)
+                 = MAF / (Lambda × 11.516)
 ```
+
+MAF is grams of air per second; 14.7 is the stoichiometric air-to-fuel
+ratio for gasoline; 745 g/L is the density of gasoline; 3600 converts
+seconds to hours; 3.785 L/gal converts to US gallons. Commanded lambda
+scales the stoichiometric ratio to whatever the ECU is actually targeting.
 
 The schema's synthetic operation is a plain ratio with no constant, so the
-constant was folded into a hidden operand instead: `LR4_FUEL_DIVISOR` reads
-Commanded Equivalence Ratio (`22F444`) with `div` set to `10771.53`
-(`32768 / 3.0421`), which yields `Lambda × 3.0421` directly. `LR4_FUEL_RATE`
-is then Mass Air Flow divided by that, already in litres per hour, and
-carries `suggestedMetric: fuelRate`.
+constant is folded into a hidden operand: `LR4_FUEL_DIVISOR` reads Commanded
+Equivalence Ratio (`22F444`) with `div` set to `2845.54` (`32768 / 11.516`),
+which yields `Lambda × 11.516` directly. `LR4_FUEL_RATE` is Mass Air Flow
+divided by that, already in gallons per hour, and carries
+`suggestedMetric: fuelRate`. The unit is declared `gallonsPerHour`, one of
+the schema's enum values, rather than relying on the app to convert.
 
-Validated against the 2026-09-20 drive: integrating the formula over 1,480
-MAF samples gives 11.21 L burned. The tank gauge fell from 87.8% to 76.9%
-over the same drive, which on the 86.3 L tank is 9.48 L — agreement to
+#### The other ways to look at it
+
+Five fuel synthetics now exist. Every one is built from the same three
+polled DIDs, so none costs any bandwidth; the budget is unchanged at
+4.100 req/s.
+
+| Signal | Formula | Unit | Lambda? |
+|---|---|---|---|
+| Fuel Rate | MAF / (λ × 11.516) | gal/h | yes |
+| Fuel Rate (gal/min) | MAF / (λ × 690.9) | scalar, labelled | yes |
+| Fuel Economy (mpg) | (mph × 11.516) / MAF | scalar, labelled | assumed 1 |
+| Fuel Use (gal/100 mi) | MAF / (mph × 0.1152) | scalar, labelled | assumed 1 |
+| Fuel Economy (mpg, lambda-corrected, test) | mph / Fuel Rate | scalar, labelled | yes, if it works |
+
+Two constraints shape that table. The unit enum has `gallonsPerHour` and
+nothing else for fuel: no gallons per minute, no miles per gallon, no
+gallons per hundred miles, no litres per 100 km. Those signals are declared
+`scalar` and carry the unit in their name. And a ratio has room for only
+two operands, so an exact mpg (speed, MAF *and* lambda) is one operand too
+many. The mpg and gal/100 mi signals drop lambda and assume 1.0, which is
+true whenever the ECU is in closed loop — most of any drive — and wrong
+under enrichment (lambda 0.8 at full throttle, so the readout is 25%
+optimistic) and during decel fuel cut (commanded lambda reads 2.0, the
+real consumption is zero, the readout is finite). On the 2026-09-23 drive
+the stoichiometric assumption cost 3% over the trip: 17.3 mpg against 17.8
+with lambda.
+
+The lambda-corrected mpg is an experiment. It divides a hidden mph copy of
+vehicle speed by the Fuel Rate synthetic itself, which only works if the
+app resolves a synthetic operand that is another synthetic. Nothing in the
+schema says either way, and no other OBDb signalset tries it. If it shows a
+number on the next drive, it is the mpg to keep and the stoichiometric one
+can go. If it stays blank, the app evaluates synthetics against raw
+signals only, and the stoichiometric version is as good as a ratio gets.
+
+Ways that were considered and do not work with what this truck offers:
+injector duty or pulse width (no DID found), the SAE fuel rate PIDs `5E`
+and `9D` (unsupported, above), and fuel level delta over distance. The last
+one is real but coarse — the gauge is 8-bit, one step is 0.34 L, and the
+trip logger already records tank level at the start and end of every
+journey in its own store, so it makes a check on the formula rather than a
+live signal.
+
+Validated twice. Integrating the formula over 1,480 MAF samples on the
+2026-09-20 drive gives 11.21 L (2.96 gal) burned; the tank gauge fell from
+87.8% to 76.9%, which on the 86.3 L tank is 9.48 L (2.50 gal) — agreement to
 about 18%, on the pessimistic side, over 91.5 km (19.2 mpg by the
-formula). It's an estimate, not a measurement: the gauge is 8-bit (one step
-is 0.34 L), and float angle off-road makes it worse. Treat Fuel Rate as
-directionally useful, not a trip computer.
+formula). On the 2026-09-23 drive, 15.2 km in 21 minutes, the formula gives
+0.54 gal against 0.45 gal on the gauge, where a single gauge step is
+0.09 gal. Treat all five as directionally useful, not a trip computer.
+
+#### Decimal places are the app's call
+
+The stored fuel-rate values are full floats (`44.309198338607594`), and
+that is what the app prints for a synthetic. Nothing in the signalset
+changes it: the schema's `fmt` block has scaling, range, unit and map
+fields and no precision field, and a synthetic has fewer fields still. The
+same is true of the one decimal that appears on temperatures once the app
+is set to Fahrenheit: the signal is an integer in Celsius, the conversion
+makes it fractional, and the app's formatter keeps one place. Both are
+requests for the app (support@clutch.engineering), not for this file.
 
 ---
 
@@ -1202,8 +1262,9 @@ Jaguar signalset does and what has never been tried here.
 
 ### Hidden signals
 
-Eleven of the file's 84 signals (including synthetics) carry `hidden: true`:
-the remaining `*_RAW` probes and the `3B02` byte splits.
+Thirty-seven of the file's 119 signals (including synthetics) carry
+`hidden: true`: the `*_RAW` probes, the `3B02` byte splits and the
+synthetic operands.
 
 **`hidden: true` does not appear to do anything in this app.** Screenshots
 taken on 2026-09-20 show `3B00 Raw`, `3B01 Raw`, `3B02 Byte 1`, `3B4D Raw`,
